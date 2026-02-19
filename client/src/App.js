@@ -29,13 +29,12 @@ const CAST = [
 ];
 
 const SCORING_EVENTS = [
-  { id: "survives_episode",         label: "Survives Episode",              pts: 2,  icon: "🔥" },
   { id: "wins_individual_immunity", label: "Wins Individual Immunity",      pts: 5,  icon: "🏆" },
-  { id: "wins_tribal_immunity",     label: "Wins Tribal/Team Immunity",     pts: 3,  icon: "⚔️" },
-  { id: "wins_reward",              label: "Wins Reward Challenge",         pts: 3,  icon: "🎁" },
+  { id: "wins_reward",              label: "Wins Individual Reward",        pts: 3,  icon: "🎁" },
+  { id: "wins_tribal_immunity",     label: "Wins Team Challenge",           pts: 2,  icon: "⚔️" },
   { id: "finds_idol",               label: "Finds Hidden Immunity Idol",    pts: 5,  icon: "🗿" },
   { id: "plays_idol_successfully",  label: "Plays Idol Successfully",       pts: 7,  icon: "✨" },
-  { id: "plays_idol_unnecessarily", label: "Plays Idol (No Votes Against)", pts: -2, icon: "💸" },
+  { id: "plays_idol_unnecessarily", label: "Plays Idol (No Votes Against)", pts: -5, icon: "💸" },
   { id: "makes_jury",               label: "Makes the Jury",                pts: 5,  icon: "⚖️" },
   { id: "makes_ftc",                label: "Makes Final Tribal Council",    pts: 10, icon: "🌴" },
   { id: "wins_game",                label: "Wins Sole Survivor",            pts: 20, icon: "👑" },
