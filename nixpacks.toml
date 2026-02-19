@@ -1,5 +1,8 @@
-[phases.build]
-cmds = ["npm install", "npm run build"]
+[phases.install]
+cmds = ["npm install", "cd client && npm install"]
 
-[phases.start]
-cmds = ["npm start"]
+[phases.build]
+cmds = ["cd client && npm run build"]
+
+[start]
+cmd = "node server/index.js"
