@@ -2,30 +2,30 @@ import { useState, useEffect, useCallback } from "react";
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
 const CAST = [
-  { id: 1,  name: "Jenna Lewis-Dougherty", seasons: "S1, S8" },
-  { id: 2,  name: "Colby Donaldson",        seasons: "S2, S8, S20" },
-  { id: 3,  name: "Stephenie LaGrossa",     seasons: "S10, S11, S20" },
-  { id: 4,  name: "Cirie Fields",           seasons: "S12, S16, S20, S34" },
-  { id: 5,  name: "Ozzy Lusth",             seasons: "S13, S16, S23, S34" },
-  { id: 6,  name: "Coach Wade",             seasons: "S18, S20, S23" },
-  { id: 7,  name: "Aubry Bracco",           seasons: "S32, S34, S38" },
-  { id: 8,  name: "Chrissy Hofbeck",        seasons: "S35" },
-  { id: 9,  name: "Christian Hubicki",      seasons: "S37" },
-  { id: 10, name: "Angelina Keeley",        seasons: "S37" },
-  { id: 11, name: "Mike White",             seasons: "S37" },
-  { id: 12, name: "Rick Devens",            seasons: "S38" },
-  { id: 13, name: "Tiffany Ervin",          seasons: "S42" },
-  { id: 14, name: "Dee Valladares",         seasons: "S45 Winner" },
-  { id: 15, name: "Emily Flippen",          seasons: "S45" },
-  { id: 16, name: "Q Burdette",             seasons: "S46" },
-  { id: 17, name: "Charlie Davis",          seasons: "S46" },
-  { id: 18, name: "Jonathan Young",         seasons: "S42" },
-  { id: 19, name: "Kyle Fraser",            seasons: "S48 Winner" },
-  { id: 20, name: "Joe Hunter",             seasons: "S48" },
-  { id: 21, name: "Kamilla Karthigesu",     seasons: "S48" },
-  { id: 22, name: "Rizo Velovic",           seasons: "S49" },
-  { id: 23, name: "Savannah Louie",         seasons: "S49 Winner" },
-  { id: 24, name: "Anika Dhar",             seasons: "S47" },
+  { id: 1,  name: "Jenna Lewis-Dougherty",        seasons: "S1, S8",          img: "jenna-lewis-dougherty" },
+  { id: 2,  name: "Colby Donaldson",               seasons: "S2, S8, S20",     img: "colby-donaldson" },
+  { id: 3,  name: "Stephenie LaGrossa Kendrick",   seasons: "S10, S11, S20",   img: "stephenie-lagrossa-kendrick" },
+  { id: 4,  name: "Cirie Fields",                  seasons: "S12, S16, S20, S34", img: "cirie-fields" },
+  { id: 5,  name: "Oscar \"Ozzy\" Lusth",          seasons: "S13, S16, S23, S34", img: "ozzy-lusth" },
+  { id: 6,  name: "Benjamin \"Coach\" Wade",       seasons: "S18, S20, S23",   img: "coach-wade" },
+  { id: 7,  name: "Aubry Bracco",                  seasons: "S32, S34, S38",   img: "aubry-bracco" },
+  { id: 8,  name: "Chrissy Hofbeck",               seasons: "S35",             img: "chrissy-hofbeck" },
+  { id: 9,  name: "Christian Hubicki",             seasons: "S37",             img: "christian-hubicki" },
+  { id: 10, name: "Angelina Keeley",               seasons: "S37",             img: "angelina-keeley" },
+  { id: 11, name: "Mike White",                    seasons: "S37",             img: "mike-white" },
+  { id: 12, name: "Rick Devens",                   seasons: "S38",             img: "rick-devens" },
+  { id: 13, name: "Tiffany Ervin",                 seasons: "S46",             img: "tiffany-ervin" },
+  { id: 14, name: "Dianelys \"Dee\" Valladares",   seasons: "S45 Winner",      img: "dee-valladares" },
+  { id: 15, name: "Emily Flippen",                 seasons: "S45",             img: "emily-flippen" },
+  { id: 16, name: "Quintavius \"Q\" Burdette",     seasons: "S46",             img: "q-burdette" },
+  { id: 17, name: "Charlie Davis",                 seasons: "S46",             img: "charlie-davis" },
+  { id: 18, name: "Jonathan Young",                seasons: "S42",             img: "jonathan-young" },
+  { id: 19, name: "Kyle Fraser",                   seasons: "S48 Winner",      img: "kyle-fraser" },
+  { id: 20, name: "Joe Hunter",                    seasons: "S48",             img: "joe-hunter" },
+  { id: 21, name: "Kamilla Karthigesu",            seasons: "S48",             img: "kamilla-karthigesu" },
+  { id: 22, name: "Rizo Velovic",                  seasons: "S49",             img: "rizo-velovic" },
+  { id: 23, name: "Savannah Louie",                seasons: "S49 Winner",      img: "savannah-louie" },
+  { id: 24, name: "Genevieve Mushaluk",            seasons: "S47",             img: "genevieve-mushaluk" },
 ];
 
 const SCORING_EVENTS = [
@@ -80,6 +80,19 @@ function computeScores(state) {
     teamScores[user.username] = { total, breakdown };
   }
   return { castScores, teamScores };
+}
+
+function Headshot({ img, size = 44 }) {
+  return (
+    <div style={{ width: size, height: size, borderRadius: "50%", overflow: "hidden", flexShrink: 0, border: "2px solid rgba(245,158,11,.3)", background: "#1e1710" }}>
+      <img
+        src={`/images/${img}.webp`}
+        alt=""
+        style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }}
+        onError={e => { e.target.style.display = "none"; }}
+      />
+    </div>
+  );
 }
 
 // ── ROOT APP ───────────────────────────────────────────────────────────────
@@ -405,11 +418,16 @@ function DraftPage({ me, state, setMe, fetchState }) {
           const sel = picks.includes(c.id);
           const full = picks.length >= 8 && !sel;
           return (
-            <div key={c.id} onClick={() => toggle(c.id)} style={{ ...S.card, cursor: locked || full ? "not-allowed" : "pointer", padding: "10px 12px", position: "relative", opacity: full ? 0.35 : 1, border: sel ? `1px solid ${C.am}` : `1px solid ${C.bd}`, background: sel ? "rgba(245,158,11,.12)" : "linear-gradient(135deg,#161208,#1e1710)", transition: "all .15s" }}>
-              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{c.name}</div>
-              <div style={{ fontSize: 11, color: C.mu }}>{c.seasons}</div>
-              {sel && <div style={{ position: "absolute", top: 7, right: 9, color: C.al, fontWeight: 700 }}>✓</div>}
-            </div>
+<div key={c.id} onClick={() => toggle(c.id)} style={{ ...S.card, cursor: locked || full ? "not-allowed" : "pointer", padding: "10px 12px", position: "relative", opacity: full ? 0.35 : 1, border: sel ? `1px solid ${C.am}` : `1px solid ${C.bd}`, background: sel ? "rgba(245,158,11,.12)" : "linear-gradient(135deg,#161208,#1e1710)", transition: "all .15s" }}>
+  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+    <Headshot img={c.img} size={44} />
+    <div>
+      <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{c.name}</div>
+      <div style={{ fontSize: 11, color: C.mu }}>{c.seasons}</div>
+    </div>
+  </div>
+  {sel && <div style={{ position: "absolute", top: 7, right: 9, color: C.al, fontWeight: 700 }}>✓</div>}
+</div>
           );
         })}
       </div>
@@ -512,11 +530,16 @@ function ScoringPage({ state, scores }) {
           const pts = scores.castScores[c.id] || 0;
           const on = sel === c.id;
           return (
-            <div key={c.id} onClick={() => setSel(on ? null : c.id)} style={{ ...S.card, cursor: "pointer", padding: "10px 12px", border: on ? `1px solid ${C.am}` : `1px solid ${C.bd}`, background: on ? "rgba(245,158,11,.1)" : "linear-gradient(135deg,#161208,#1e1710)", transition: "all .15s" }}>
-              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{c.name}</div>
-              <div style={{ fontSize: 11, color: C.mu, marginBottom: 4 }}>{c.seasons}</div>
-              <div style={{ fontSize: 17, fontWeight: 700, color: pts > 0 ? C.al : pts < 0 ? "#f87171" : C.mu }}>{pts > 0 ? `+${pts}` : pts} pts</div>
-            </div>
+<div key={c.id} onClick={() => setSel(on ? null : c.id)} style={{ ...S.card, cursor: "pointer", padding: "10px 12px", border: on ? `1px solid ${C.am}` : `1px solid ${C.bd}`, background: on ? "rgba(245,158,11,.1)" : "linear-gradient(135deg,#161208,#1e1710)", transition: "all .15s" }}>
+  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+    <Headshot img={c.img} size={40} />
+    <div>
+      <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{c.name}</div>
+      <div style={{ fontSize: 11, color: C.mu }}>{c.seasons}</div>
+    </div>
+  </div>
+  <div style={{ fontSize: 17, fontWeight: 700, color: pts > 0 ? C.al : pts < 0 ? "#f87171" : C.mu }}>{pts > 0 ? `+${pts}` : pts} pts</div>
+</div>
           );
         })}
       </div>
