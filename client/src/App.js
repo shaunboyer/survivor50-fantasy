@@ -420,7 +420,7 @@ function DraftPage({ me, state, setMe, fetchState }) {
           return (
 <div key={c.id} onClick={() => toggle(c.id)} style={{ ...S.card, cursor: locked || full ? "not-allowed" : "pointer", padding: "10px 12px", position: "relative", opacity: full ? 0.35 : 1, border: sel ? `1px solid ${C.am}` : `1px solid ${C.bd}`, background: sel ? "rgba(245,158,11,.12)" : "linear-gradient(135deg,#161208,#1e1710)", transition: "all .15s" }}>
   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-    <Headshot img={c.img} size={44} />
+    <Headshot img={c.img} size={88} />
     <div>
       <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{c.name}</div>
       <div style={{ fontSize: 11, color: C.mu }}>{c.seasons}</div>
@@ -532,7 +532,7 @@ function ScoringPage({ state, scores }) {
           return (
 <div key={c.id} onClick={() => setSel(on ? null : c.id)} style={{ ...S.card, cursor: "pointer", padding: "10px 12px", border: on ? `1px solid ${C.am}` : `1px solid ${C.bd}`, background: on ? "rgba(245,158,11,.1)" : "linear-gradient(135deg,#161208,#1e1710)", transition: "all .15s" }}>
   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-    <Headshot img={c.img} size={40} />
+    <Headshot img={c.img} size={80} />
     <div>
       <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{c.name}</div>
       <div style={{ fontSize: 11, color: C.mu }}>{c.seasons}</div>
