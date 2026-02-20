@@ -105,6 +105,13 @@ app.post("/api/picks", auth, (req, res) => {
   res.json({ ok: true });
 });
 
+app.post("/api/admin/reset-picks", auth, adminOnly, (req, res) => {
+  const { username } = req.body;
+  if (!username) return res.status(400).json({ error: "Missing username" });
+  db.prepare("UPDATE users SET picks = '[]' WHERE username = ?").run(username);
+  res.json({ ok: true });
+});
+
 // ── LEADERBOARD / SCORES ───────────────────────────────────────────────────
 app.get("/api/state", auth, (req, res) => {
   const draftOpen = db.prepare("SELECT value FROM settings WHERE key = 'draft_open'").get()?.value === "1";

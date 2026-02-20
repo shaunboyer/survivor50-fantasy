@@ -585,6 +585,14 @@ function AdminPage({ state, fetchState }) {
     } catch (e) { flash("❌ " + e.message); }
   }
 
+  async function resetPicks(username) {
+  try {
+    await api("POST", "/admin/reset-picks", { username });
+    await fetchState();
+    flash(`🗑 ${username}'s team cleared.`);
+  } catch (e) { flash("❌ " + e.message); }
+}
+
   const shownCast = CAST.filter(c => c.name.toLowerCase().includes(q.toLowerCase()));
   const castObj = CAST.find(c => c.id === castSel);
   const evtObj  = SCORING_EVENTS.find(s => s.id === evtSel);
@@ -670,13 +678,21 @@ function AdminPage({ state, fetchState }) {
               <div style={{ color: C.mu, fontStyle: "italic" }}>No participants yet.</div>
             )}
             {(state?.users || []).filter(u => !u.isAdmin).map(u => (
-              <div key={u.username} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px solid ${C.bd}`, fontSize: 14 }}>
-                <span>{u.username}</span>
-                <span style={{ color: (u.picks?.length || 0) === 8 ? "#4ade80" : C.mu }}>
-                  {u.picks?.length || 0}/8 {(u.picks?.length || 0) === 8 ? "✓" : ""}
-                </span>
-              </div>
-            ))}
+  <div key={u.username} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:`1px solid ${C.bd}`, fontSize:14 }}>
+    <span>{u.username}</span>
+    <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+      <span style={{ color:(u.picks?.length||0) === 8 ? "#4ade80" : C.mu }}>
+        {u.picks?.length||0}/8 {(u.picks?.length||0) === 8 ? "✓" : ""}
+      </span>
+      <button
+        style={{ background:"rgba(248,113,113,.1)", border:"1px solid rgba(248,113,113,.3)", color:"#f87171", cursor:"pointer", borderRadius:2, padding:"2px 8px", fontSize:11 }}
+        onClick={() => { if(window.confirm(`Clear ${u.username}'s team?`)) resetPicks(u.username); }}
+      >
+        Clear
+      </button>
+    </div>
+  </div>
+))}
           </div>
         </div>
       )}
