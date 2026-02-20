@@ -69,7 +69,7 @@ function computeScores(state) {
   }
   const teamScores = {};
   for (const user of state.users) {
-    if (user.isAdmin) continue;
+    if (!user.picks || user.picks.length === 0) continue;
     let total = 0;
     const breakdown = {};
     for (const cid of (user.picks || [])) {
