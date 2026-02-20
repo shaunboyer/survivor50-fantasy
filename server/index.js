@@ -112,6 +112,12 @@ app.post("/api/admin/reset-picks", auth, adminOnly, (req, res) => {
   res.json({ ok: true });
 });
 
+app.delete("/api/admin/users/:username", auth, adminOnly, (req, res) => {
+  const { username } = req.params;
+  db.prepare("DELETE FROM users WHERE username = ?").run(username);
+  res.json({ ok: true });
+});
+
 // ── LEADERBOARD / SCORES ───────────────────────────────────────────────────
 app.get("/api/state", auth, (req, res) => {
   const draftOpen = db.prepare("SELECT value FROM settings WHERE key = 'draft_open'").get()?.value === "1";
