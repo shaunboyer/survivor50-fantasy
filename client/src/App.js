@@ -458,25 +458,33 @@ function LeaderboardPage({ me, state, scores }) {
                   <span style={{ color: C.mu, fontSize: 11 }}>{isExp ? "▲" : "▼"}</span>
                 </div>
               </div>
-              {isExp && (
+          {isExp && (
                 <div style={{ padding: "0 16px 12px", borderTop: `1px solid ${C.bd}` }}>
                   <div style={{ paddingTop: 9, display: "flex", flexDirection: "column", gap: 4 }}>
-                    {(user?.picks || []).length === 0 && <div style={{ color: C.mu, fontStyle: "italic", fontSize: 13 }}>No picks yet.</div>}
-                    {(user?.picks || []).map((cid, idx) => {
-                      const c = CAST.find(x => x.id === cid);
-                      const p = breakdown[cid] ?? 0;
-                      return (
-                        <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13 }}>
-                          <span style={{ color: C.tx }}>{c?.name} <span style={{ color: C.mu, fontSize: 11 }}>({c?.seasons})</span></span>
-                          <span style={{ color: p >= 0 ? "#4ade80" : "#f87171", fontWeight: 600 }}>{p >= 0 ? `+${p}` : p} pts</span>
-                        </div>
-                      );
-                    })}
-                    {(user?.picks || []).length > 0 && (
-                      <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${C.bd}`, display: "flex", justifyContent: "space-between", fontSize: 13, fontWeight: 700 }}>
-                        <span style={{ color: C.mu }}>TOTAL</span>
-                        <span style={{ color: C.al }}>{total} pts</span>
+                    {state?.draftOpen && uname !== me.username ? (
+                      <div style={{ color: C.mu, fontStyle: "italic", fontSize: 13 }}>
+                        🔒 Picks hidden until the draft closes.
                       </div>
+                    ) : (
+                      <>
+                        {(user?.picks || []).length === 0 && <div style={{ color: C.mu, fontStyle: "italic", fontSize: 13 }}>No picks yet.</div>}
+                        {(user?.picks || []).map((cid, idx) => {
+                          const c = CAST.find(x => x.id === cid);
+                          const p = breakdown[cid] ?? 0;
+                          return (
+                            <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13 }}>
+                              <span style={{ color: C.tx }}>{c?.name} <span style={{ color: C.mu, fontSize: 11 }}>({c?.seasons})</span></span>
+                              <span style={{ color: p >= 0 ? "#4ade80" : "#f87171", fontWeight: 600 }}>{p >= 0 ? `+${p}` : p} pts</span>
+                            </div>
+                          );
+                        })}
+                        {(user?.picks || []).length > 0 && (
+                          <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${C.bd}`, display: "flex", justifyContent: "space-between", fontSize: 13, fontWeight: 700 }}>
+                            <span style={{ color: C.mu }}>TOTAL</span>
+                            <span style={{ color: C.al }}>{total} pts</span>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
