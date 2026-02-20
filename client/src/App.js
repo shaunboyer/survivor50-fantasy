@@ -201,7 +201,7 @@ export default function App() {
         {me && page === "draft"       && <DraftPage me={me} state={state} setMe={setMe} fetchState={fetchState} />}
         {me && page === "leaderboard" && <LeaderboardPage me={me} state={state} scores={scores} />}
         {me && page === "scoring"     && <ScoringPage state={state} scores={scores} />}
-        {me && isAdmin && page === "admin" && <AdminPage state={state} fetchState={fetchState} />}
+        {me && isAdmin && page === "admin" && <AdminPage state={state} fetchState={fetchState} me={me} />}
       </div>
     </div>
   );
@@ -553,7 +553,7 @@ function ScoringPage({ state, scores }) {
 }
 
 // ── ADMIN PAGE ─────────────────────────────────────────────────────────────
-function AdminPage({ state, fetchState }) {
+function AdminPage({ state, fetchState, me }) {
   const [tab,     setTab]     = useState("log");
   const [castSel, setCastSel] = useState(null);
   const [evtSel,  setEvtSel]  = useState(null);
@@ -693,7 +693,7 @@ async function deleteUser(username) {
             {(state?.users || []).filter(u => !u.isAdmin).length === 0 && (
               <div style={{ color: C.mu, fontStyle: "italic" }}>No participants yet.</div>
             )}
-            {(state?.users || []).filter(u => u.username !== me.username).map(u => (
+      {(state?.users || []).filter(u => u.username !== me?.username).map(u => (
   <div key={u.username} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:`1px solid ${C.bd}`, fontSize:14 }}>
     <span>{u.username}</span>
     <div style={{ display:"flex", alignItems:"center", gap:10 }}>
