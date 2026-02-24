@@ -303,6 +303,44 @@ function AuthPanel({ mode, uname, setUname, pwd, setPwd, err, setErr, loading, o
     </div>
   );
 }
+// EPISODE COUNTDOWN
+function EpisodeCountdown() {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    function getNext() {
+      const now = new Date();
+      // Next Wednesday at 8pm PST = 04:00 UTC Thursday
+      const target = new Date();
+      target.setUTCHours(4, 0, 0, 0);
+      const day = target.getUTCDay();
+      // Thursday in UTC = day 4
+      const daysUntilThu = (4 - day + 7) % 7 || 7;
+      target.setUTCDate(target.getUTCDate() + daysUntilThu);
+      if (target <= now) target.setUTCDate(target.getUTCDate() + 7);
+
+      const diff = target - now;
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      return `${d}d ${h}h ${m}m ${s}s`;
+    }
+
+    setTimeLeft(getNext());
+    const interval = setInterval(() => setTimeLeft(getNext()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div style={{ ...S.card, textAlign: "center", padding: "20px 16px", marginBottom: 20 }}>
+      <div style={{ fontSize: 11, letterSpacing: 3, color: C.mu, textTransform: "uppercase", marginBottom: 8 }}>NEXT EPISODE</div>
+      <div style={{ fontSize: 13, color: C.mu, marginBottom: 10 }}>Wednesdays at 8pm PST on CBS</div>
+      <div style={{ fontSize: 32, fontWeight: 700, color: C.al, letterSpacing: 2, fontVariantNumeric: "tabular-nums" }}>{timeLeft}</div>
+    </div>
+  );
+}
+
 
 // ── HOME PAGE ──────────────────────────────────────────────────────────────
 function HomePage({ me, state, scores, go }) {
@@ -324,6 +362,8 @@ function HomePage({ me, state, scores, go }) {
         <StatCard icon="📋" label="DRAFT"     val={state?.draftOpen ? "OPEN" : "CLOSED"} color={state?.draftOpen ? "#4ade80" : "#f87171"} />
       </div>
 
+      <EpisodeCountdown />
+
       {picks.length < 8 && state?.draftOpen && (
         <div style={S.callout}>⚠️ You haven't drafted your team yet! <button style={S.lnk} onClick={() => go("draft")}>Draft Now →</button></div>
       )}
@@ -337,8 +377,13 @@ function HomePage({ me, state, scores, go }) {
               const p = ts.breakdown[cid] ?? 0;
               return (
                 <div key={`${cid}-${Math.random()}`} style={{ background: "rgba(245,158,11,.05)", border: `1px solid ${C.bd}`, borderRadius: 4, padding: "10px 12px" }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{c?.name}</div>
-                  <div style={{ fontSize: 11, color: C.mu, marginBottom: 4 }}>{c?.seasons}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                    <Headshot img={c?.img} size={44} />
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{c?.name}</div>
+                      <div style={{ fontSize: 11, color: C.mu }}>{c?.seasons}</div>
+                    </div>
+                  </div>
                   <div style={{ fontSize: 16, color: C.al, fontWeight: 700 }}>{p >= 0 ? `+${p}` : p} pts</div>
                 </div>
               );
