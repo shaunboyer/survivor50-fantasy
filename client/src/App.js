@@ -102,7 +102,7 @@ function PrizesPage({ scores }) {
     {
       place: "1st Place",
       medal: "🥇",
-      item: "Survivor Replica Snake & Ball Puzzle",
+      item: "REPLICA SNAKE & BALL PUZZLE",
       img: "/images/survivorpuzzle.webp",
       color: "#fbbf24",
       shadow: "rgba(251,191,36,.2)",
@@ -112,7 +112,7 @@ function PrizesPage({ scores }) {
     {
       place: "2nd Place",
       medal: "🥈",
-      item: "Survivor Buff",
+      item: "SURVIVOR BUFF OF YOUR CHOICE",
       img: "/images/survivorbuff.png",
       color: "#94a3b8",
       shadow: "rgba(148,163,184,.2)",
@@ -122,7 +122,7 @@ function PrizesPage({ scores }) {
     {
       place: "3rd Place",
       medal: "🥉",
-      item: "20 LB Bag of Rice",
+      item: "20 LB BAG OF RICE",
       img: "/images/survivorrice.webp",
       color: "#b45309",
       shadow: "rgba(180,83,9,.2)",
