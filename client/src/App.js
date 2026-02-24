@@ -362,8 +362,6 @@ function HomePage({ me, state, scores, go }) {
         <StatCard icon="📋" label="DRAFT"     val={state?.draftOpen ? "OPEN" : "CLOSED"} color={state?.draftOpen ? "#4ade80" : "#f87171"} />
       </div>
 
-      <EpisodeCountdown />
-
       {picks.length < 8 && state?.draftOpen && (
         <div style={S.callout}>⚠️ You haven't drafted your team yet! <button style={S.lnk} onClick={() => go("draft")}>Draft Now →</button></div>
       )}
@@ -391,6 +389,9 @@ function HomePage({ me, state, scores, go }) {
           </div>
         </div>
       )}
+
+            <EpisodeCountdown />
+
     </div>
   );
 }
