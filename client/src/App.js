@@ -795,8 +795,7 @@ async function deleteUser(username) {
       {toast && <div style={{ position: "fixed", bottom: 22, right: 22, background: "#166534", border: "1px solid #4ade80", color: "#4ade80", padding: "10px 16px", borderRadius: 4, zIndex: 999, fontSize: 14 }}>{toast}</div>}
 
       <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
-        {[["log", "Log Events"], ["draft", "Draft Control"], ["history", "Event History"]].map(([id, label]) => (
-          <button key={id} style={{ ...S.nb, ...(tab === id ? S.nba : {}) }} onClick={() => setTab(id)}>{label}</button>
+{[["log", "Log Events"], ["draft", "Draft Control"], ["history", "Event History"], ["unique", "Uniqueness"]].map(([id, label]) => (          <button key={id} style={{ ...S.nb, ...(tab === id ? S.nba : {}) }} onClick={() => setTab(id)}>{label}</button>
         ))}
       </div>
 
@@ -918,6 +917,57 @@ async function deleteUser(username) {
           })}
         </div>
       )}
+
+      {/* UNIQUENESS RANKING */}
+      {tab === "unique" && (
+        <div style={S.card}>
+          <div style={S.cT}>MOST UNIQUE TEAMS</div>
+          <div style={{ fontSize: 13, color: C.mu, marginBottom: 16 }}>
+            Each castaway's "draft count" is summed across a player's 8 picks. Lower score = more unique team.
+          </div>
+          {(() => {
+            const users = (state?.users || []).filter(u => u.username !== me?.username && (u.picks || []).length === 8);
+            if (users.length === 0) return <div style={{ color: C.mu, fontStyle: "italic" }}>No completed teams yet.</div>;
+
+            const ranked = users.map(u => {
+              const uniquenessScore = (u.picks || []).reduce((sum, cid) => {
+                const count = (state?.users || []).filter(x => (x.picks || []).includes(cid)).length;
+                return sum + count;
+              }, 0);
+              return { username: u.username, picks: u.picks, uniquenessScore };
+            }).sort((a, b) => a.uniquenessScore - b.uniquenessScore);
+
+            const medals = ["🥇", "🥈", "🥉"];
+
+            return ranked.map((u, i) => (
+              <div key={u.username} style={{ padding: "12px 0", borderBottom: `1px solid ${C.bd}` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 18, minWidth: 28 }}>{medals[i] || `${i + 1}.`}</span>
+                    <span style={{ fontSize: 15, fontWeight: 700 }}>{u.username}</span>
+                  </div>
+                  <span style={{ fontSize: 13, color: C.mu }}>uniqueness score: <strong style={{ color: C.al }}>{u.uniquenessScore}</strong></span>
+                </div>
+                <div style={{ paddingLeft: 38, display: "flex", flexDirection: "column", gap: 3 }}>
+                  {(u.picks || []).map(cid => {
+                    const c = CAST.find(x => x.id === cid);
+                    const count = (state?.users || []).filter(x => (x.picks || []).includes(cid)).length;
+                    return (
+                      <div key={cid} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: C.mu }}>
+                        <span>{c?.name}</span>
+                        <span style={{ color: count <= 2 ? "#4ade80" : count >= 6 ? "#f87171" : C.mu }}>
+                          drafted by {count} {count === 1 ? "team" : "teams"}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ));
+          })()}
+        </div>
+      )}
+
     </div>
   );
 }
