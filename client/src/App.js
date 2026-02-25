@@ -469,22 +469,26 @@ function HomePage({ me, state, scores, go }) {
         <div style={S.card}>
           <div style={S.cT}>MY TRIBE</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(165px,1fr))", gap: 9 }}>
-            {picks.map(cid => {
-              const c = CAST.find(x => x.id === cid);
-              const p = ts.breakdown[cid] ?? 0;
-              return (
-                <div key={`${cid}-${Math.random()}`} style={{ background: "rgba(245,158,11,.05)", border: `1px solid ${C.bd}`, borderRadius: 4, padding: "10px 12px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                    <Headshot img={c?.img} size={44} />
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{c?.name}</div>
-                      <div style={{ fontSize: 11, color: C.mu }}>{c?.seasons}</div>
+              {picks.map(cid => {
+                const c = CAST.find(x => x.id === cid);
+                const p = ts.breakdown[cid] ?? 0;
+                const draftCount = (state?.users || []).filter(u => (u.picks || []).includes(cid)).length;
+                return (
+                  <div key={`${cid}-${Math.random()}`} style={{ background: "rgba(245,158,11,.05)", border: `1px solid ${C.bd}`, borderRadius: 4, padding: "10px 12px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                      <Headshot img={c?.img} size={44} />
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{c?.name}</div>
+                        <div style={{ fontSize: 11, color: C.mu }}>{c?.seasons}</div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ fontSize: 16, color: C.al, fontWeight: 700 }}>{p >= 0 ? `+${p}` : p} pts</div>
+                      <div style={{ fontSize: 11, color: C.mu }}>{draftCount} drafted</div>
                     </div>
                   </div>
-                  <div style={{ fontSize: 16, color: C.al, fontWeight: 700 }}>{p >= 0 ? `+${p}` : p} pts</div>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         </div>
       )}
@@ -683,7 +687,10 @@ function ScoringPage({ state, scores }) {
       <div style={{ fontSize: 11, color: C.mu }}>{c.seasons}</div>
     </div>
   </div>
-  <div style={{ fontSize: 17, fontWeight: 700, color: pts > 0 ? C.al : pts < 0 ? "#f87171" : C.mu }}>{pts > 0 ? `+${pts}` : pts} pts</div>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ fontSize: 17, fontWeight: 700, color: pts > 0 ? C.al : pts < 0 ? "#f87171" : C.mu }}>{pts > 0 ? `+${pts}` : pts} pts</div>
+      <div style={{ fontSize: 11, color: C.mu }}>{(data?.users || []).filter(u => (u.picks || []).includes(c.id)).length} drafted</div>
+    </div>
 </div>
           );
         })}
