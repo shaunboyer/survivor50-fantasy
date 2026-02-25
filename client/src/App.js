@@ -689,7 +689,7 @@ function ScoringPage({ state, scores }) {
   </div>
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
       <div style={{ fontSize: 17, fontWeight: 700, color: pts > 0 ? C.al : pts < 0 ? "#f87171" : C.mu }}>{pts > 0 ? `+${pts}` : pts} pts</div>
-      <div style={{ fontSize: 11, color: C.mu }}>{(data?.users || []).filter(u => (u.picks || []).includes(c.id)).length} drafted</div>
+      <div style={{ fontSize: 11, color: C.mu }}>{(state?.users || []).filter(u => (u.picks || []).includes(c.id)).length} drafted</div>
     </div>
 </div>
           );
