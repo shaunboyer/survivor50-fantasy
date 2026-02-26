@@ -63,9 +63,11 @@ async function api(method, path, body) {
 
 // ── SCORE ENGINE ───────────────────────────────────────────────────────────
 function computeScores(state) {
-  if (!state) return { castScores: {}, teamScores: {} };
+  if (!state) return { castScores: {}, teamScores: {}, eliminated: {} };
   const castScores = {};
+  const eliminated = {};
   for (const ev of state.events) {
+    if (ev.eventId === "voted_off") eliminated[ev.castId] = true;
     const def = SCORING_EVENTS.find(s => s.id === ev.eventId);
     if (def) castScores[ev.castId] = (castScores[ev.castId] || 0) + def.pts;
   }
@@ -84,15 +86,18 @@ function computeScores(state) {
   return { castScores, teamScores };
 }
 
-function Headshot({ img, size = 44 }) {
+function Headshot({ img, size = 44, eliminated = false }) {
   return (
-    <div style={{ width: size, height: size, borderRadius: "50%", overflow: "hidden", flexShrink: 0, border: "2px solid rgba(245,158,11,.3)", background: "#1e1710" }}>
+    <div style={{ width: size, height: size, borderRadius: "50%", overflow: "hidden", flexShrink: 0, border: `2px solid ${eliminated ? "rgba(255,255,255,.15)" : "rgba(245,158,11,.3)"}`, background: "#1e1710", position: "relative" }}>
       <img
         src={`/images/${img}.webp`}
         alt=""
-        style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }}
+        style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", filter: eliminated ? "grayscale(100%) brightness(0.4)" : "none" }}
         onError={e => { e.target.style.display = "none"; }}
       />
+      {eliminated && (
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.35 }}>💀</div>
+      )}
     </div>
   );
 }
@@ -356,10 +361,10 @@ export default function App() {
           />
         )}
 
-        {me && page === "home"        && <HomePage me={me} state={state} scores={scores} go={setPage} />}
+        {me && page === "home"        && <HomePage me={me} state={state} scores={scores} go={setPage} eliminated={scores.eliminated} />}
         {me && page === "draft"       && <DraftPage me={me} state={state} setMe={setMe} fetchState={fetchState} />}
         {me && page === "leaderboard" && <LeaderboardPage me={me} state={state} scores={scores} />}
-        {me && page === "scoring"     && <ScoringPage state={state} scores={scores} />}
+        {me && page === "scoring"     && <ScoringPage state={state} scores={scores} eliminated={scores.eliminated} />}
         {me && page === "prizes" && <PrizesPage scores={scores} />}
         {me && isAdmin && page === "admin" && <AdminPage state={state} fetchState={fetchState} me={me} />}
       </div>
@@ -498,7 +503,7 @@ function EpisodeCountdown() {
 
 
 // ── HOME PAGE ──────────────────────────────────────────────────────────────
-function HomePage({ me, state, scores, go }) {
+function HomePage({ me, state, scores, go, eliminated }) {
   const picks = me.picks || [];
   const ts = scores.teamScores[me.username];
   const sorted = Object.entries(scores.teamScores).sort((a, b) => b[1].total - a[1].total);
@@ -532,7 +537,7 @@ function HomePage({ me, state, scores, go }) {
                 return (
                   <div key={`${cid}-${Math.random()}`} style={{ background: "rgba(245,158,11,.05)", border: `1px solid ${C.bd}`, borderRadius: 4, padding: "10px 12px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                      <Headshot img={c?.img} size={44} />
+                      <Headshot img={c?.img} size={44} eliminated={!!eliminated?.[cid]} />
                       <div>
                         <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{c?.name}</div>
                         <div style={{ fontSize: 11, color: C.mu }}>{c?.seasons}</div>
@@ -721,7 +726,7 @@ function LeaderboardPage({ me, state, scores }) {
 }
 
 // ── SCORING PAGE ───────────────────────────────────────────────────────────
-function ScoringPage({ state, scores }) {
+function ScoringPage({ state, scores, eliminated }) {
   const [sel, setSel] = useState(null);
   const sorted = [...CAST].sort((a, b) => (scores.castScores[b.id] || 0) - (scores.castScores[a.id] || 0));
   const evts = sel ? (state?.events || []).filter(e => e.castId === sel) : [];
@@ -737,7 +742,7 @@ function ScoringPage({ state, scores }) {
           return (
 <div key={c.id} onClick={() => setSel(on ? null : c.id)} style={{ ...S.card, cursor: "pointer", padding: "10px 12px", border: on ? `1px solid ${C.am}` : `1px solid ${C.bd}`, background: on ? "rgba(245,158,11,.1)" : "linear-gradient(135deg,#161208,#1e1710)", transition: "all .15s" }}>
   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-    <Headshot img={c.img} size={80} />
+<Headshot img={c.img} size={80} eliminated={!!eliminated?.[c.id]} />
     <div>
       <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{c.name}</div>
       <div style={{ fontSize: 11, color: C.mu }}>{c.seasons}</div>
@@ -913,8 +918,10 @@ async function deleteUser(username) {
       {toast && <div style={{ position: "fixed", bottom: 22, right: 22, background: "#166534", border: "1px solid #4ade80", color: "#4ade80", padding: "10px 16px", borderRadius: 4, zIndex: 999, fontSize: 14 }}>{toast}</div>}
 
       <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
-{[["log", "Log Events"], ["draft", "Draft Control"], ["history", "Event History"], ["unique", "Uniqueness"], ["resets", "Password Resets"]].map(([id, label]) => (      </div>
-
+{[["log", "Log Events"], ["draft", "Draft Control"], ["history", "Event History"], ["unique", "Uniqueness"], ["resets", "Password Resets"]].map(([id, label]) => (
+          <button key={id} style={{ ...S.nb, ...(tab === id ? S.nba : {}) }} onClick={() => setTab(id)}>{label}</button>
+        ))}
+      </div>
       {/* LOG EVENTS */}
       {tab === "log" && (
         <div>
