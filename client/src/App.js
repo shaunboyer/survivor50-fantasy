@@ -1009,7 +1009,7 @@ async function deleteUser(username) {
             {(state?.users || []).filter(u => !u.isAdmin).length === 0 && (
               <div style={{ color: C.mu, fontStyle: "italic" }}>No participants yet.</div>
             )}
-      {(state?.users || []).filter(u => u.username !== me?.username).map(u => (
+{(state?.users || []).map(u => (
   <div key={u.username} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:`1px solid ${C.bd}`, fontSize:14 }}>
     <span>{u.username}</span>
     <div style={{ display:"flex", alignItems:"center", gap:10 }}>
