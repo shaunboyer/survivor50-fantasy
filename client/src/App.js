@@ -32,6 +32,7 @@ const SCORING_EVENTS = [
   { id: "wins_individual_immunity", label: "Wins Individual Immunity",      pts: 5,  icon: "🏆" },
   { id: "wins_reward",              label: "Wins Individual Reward",        pts: 3,  icon: "🎁" },
   { id: "wins_tribal_immunity",     label: "Wins Team Challenge",           pts: 2,  icon: "⚔️" },
+  { id: "second_tribal_immunity",   label: "2nd Place Team Challenge",      pts: 1, icon: "🥈" },
   { id: "finds_idol",               label: "Finds Hidden Immunity Idol",    pts: 5,  icon: "🗿" },
   { id: "plays_idol_successfully",  label: "Plays Idol Successfully",       pts: 7,  icon: "✨" },
   { id: "plays_idol_unnecessarily", label: "Plays Idol (No Votes Against)", pts: -5, icon: "💸" },
