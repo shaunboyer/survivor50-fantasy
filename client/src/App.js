@@ -2,31 +2,37 @@ import { useState, useEffect, useCallback } from "react";
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
 const CAST = [
-  { id: 1,  name: "Jenna Lewis-Dougherty",        seasons: "S1, S8",          img: "jenna-lewis-dougherty" },
-  { id: 2,  name: "Colby Donaldson",               seasons: "S2, S8, S20",     img: "colby-donaldson" },
-  { id: 3,  name: "Stephenie LaGrossa Kendrick",   seasons: "S10, S11, S20",   img: "stephenie-lagrossa-kendrick" },
-  { id: 4,  name: "Cirie Fields",                  seasons: "S12, S16, S20, S34", img: "cirie-fields" },
-  { id: 5,  name: "Oscar \"Ozzy\" Lusth",          seasons: "S13, S16, S23, S34", img: "ozzy-lusth" },
-  { id: 6,  name: "Benjamin \"Coach\" Wade",       seasons: "S18, S20, S23",   img: "coach-wade" },
-  { id: 7,  name: "Aubry Bracco",                  seasons: "S32, S34, S38",   img: "aubry-bracco" },
-  { id: 8,  name: "Chrissy Hofbeck",               seasons: "S35",             img: "chrissy-hofbeck" },
-  { id: 9,  name: "Christian Hubicki",             seasons: "S37",             img: "christian-hubicki" },
-  { id: 10, name: "Angelina Keeley",               seasons: "S37",             img: "angelina-keeley" },
-  { id: 11, name: "Mike White",                    seasons: "S37",             img: "mike-white" },
-  { id: 12, name: "Rick Devens",                   seasons: "S38",             img: "rick-devens" },
-  { id: 13, name: "Tiffany Ervin",                 seasons: "S46",             img: "tiffany-ervin" },
-  { id: 14, name: "Dianelys \"Dee\" Valladares",   seasons: "S45 Winner",      img: "dee-valladares" },
-  { id: 15, name: "Emily Flippen",                 seasons: "S45",             img: "emily-flippen" },
-  { id: 16, name: "Quintavius \"Q\" Burdette",     seasons: "S46",             img: "q-burdette" },
-  { id: 17, name: "Charlie Davis",                 seasons: "S46",             img: "charlie-davis" },
-  { id: 18, name: "Jonathan Young",                seasons: "S42",             img: "jonathan-young" },
-  { id: 19, name: "Kyle Fraser",                   seasons: "S48 Winner",      img: "kyle-fraser" },
-  { id: 20, name: "Joe Hunter",                    seasons: "S48",             img: "joe-hunter" },
-  { id: 21, name: "Kamilla Karthigesu",            seasons: "S48",             img: "kamilla-karthigesu" },
-  { id: 22, name: "Rizo Velovic",                  seasons: "S49",             img: "rizo-velovic" },
-  { id: 23, name: "Savannah Louie",                seasons: "S49 Winner",      img: "savannah-louie" },
-  { id: 24, name: "Genevieve Mushaluk",            seasons: "S47",             img: "genevieve-mushaluk" },
+  { id: 1,  name: "Jenna Lewis-Dougherty",        seasons: "S1, S8",             img: "jenna-lewis-dougherty",        tribe: "cila" },
+  { id: 2,  name: "Colby Donaldson",               seasons: "S2, S8, S20",        img: "colby-donaldson",              tribe: "vatu" },
+  { id: 3,  name: "Stephenie LaGrossa Kendrick",   seasons: "S10, S11, S20",      img: "stephenie-lagrossa-kendrick",  tribe: "vatu" },
+  { id: 4,  name: "Cirie Fields",                  seasons: "S12, S16, S20, S34", img: "cirie-fields",                 tribe: "cila" },
+  { id: 5,  name: "Oscar \"Ozzy\" Lusth",          seasons: "S13, S16, S23, S34", img: "ozzy-lusth",                   tribe: "cila" },
+  { id: 6,  name: "Benjamin \"Coach\" Wade",       seasons: "S18, S20, S23",      img: "coach-wade",                   tribe: "kalo" },
+  { id: 7,  name: "Aubry Bracco",                  seasons: "S32, S34, S38",      img: "aubry-bracco",                 tribe: "vatu" },
+  { id: 8,  name: "Chrissy Hofbeck",               seasons: "S35",                img: "chrissy-hofbeck",              tribe: "kalo" },
+  { id: 9,  name: "Christian Hubicki",             seasons: "S37",                img: "christian-hubicki",            tribe: "cila" },
+  { id: 10, name: "Angelina Keeley",               seasons: "S37",                img: "angelina-keeley",              tribe: "vatu" },
+  { id: 11, name: "Mike White",                    seasons: "S37",                img: "mike-white",                   tribe: "kalo" },
+  { id: 12, name: "Rick Devens",                   seasons: "S38",                img: "rick-devens",                  tribe: "cila" },
+  { id: 13, name: "Tiffany Ervin",                 seasons: "S46",                img: "tiffany-ervin",                tribe: "kalo" },
+  { id: 14, name: "Dianelys \"Dee\" Valladares",   seasons: "S45 Winner",         img: "dee-valladares",               tribe: "kalo" },
+  { id: 15, name: "Emily Flippen",                 seasons: "S45",                img: "emily-flippen",                tribe: "cila" },
+  { id: 16, name: "Quintavius \"Q\" Burdette",     seasons: "S46",                img: "q-burdette",                   tribe: "vatu" },
+  { id: 17, name: "Charlie Davis",                 seasons: "S46",                img: "charlie-davis",                tribe: "kalo" },
+  { id: 18, name: "Jonathan Young",                seasons: "S42",                img: "jonathan-young",               tribe: "kalo" },
+  { id: 19, name: "Kyle Fraser",                   seasons: "S48 Winner",         img: "kyle-fraser",                  tribe: "vatu" },
+  { id: 20, name: "Joe Hunter",                    seasons: "S48",                img: "joe-hunter",                   tribe: "cila" },
+  { id: 21, name: "Kamilla Karthigesu",            seasons: "S48",                img: "kamilla-karthigesu",           tribe: "kalo" },
+  { id: 22, name: "Rizo Velovic",                  seasons: "S49",                img: "rizo-velovic",                 tribe: "vatu" },
+  { id: 23, name: "Savannah Louie",                seasons: "S49 Winner",         img: "savannah-louie",               tribe: "cila" },
+  { id: 24, name: "Genevieve Mushaluk",            seasons: "S47",                img: "genevieve-mushaluk",           tribe: "vatu" },
 ];
+
+const TRIBE_COLORS = {
+  cila: "#e8650a",
+  kalo: "#2ec4c4",
+  vatu: "#d44fc4",
+};
 
 const SCORING_EVENTS = [
   { id: "voted_off",                label: "Voted Off",                     pts: 0, icon: "💀" },
@@ -89,9 +95,11 @@ function computeScores(state) {
     return { castScores, teamScores, eliminated };
 }
 
-function Headshot({ img, size = 44, eliminated = false }) {
+function Headshot({ img, size = 44, eliminated = false, tribe }) {
+  const tribeColor = TRIBE_COLORS[tribe] || "rgba(245,158,11,.3)";
+  const borderColor = eliminated ? "rgba(255,255,255,.15)" : tribeColor;
   return (
-    <div style={{ width: size, height: size, borderRadius: "50%", overflow: "hidden", flexShrink: 0, border: `2px solid ${eliminated ? "rgba(255,255,255,.15)" : "rgba(245,158,11,.3)"}`, background: "#1e1710", position: "relative" }}>
+    <div style={{ width: size, height: size, borderRadius: "50%", overflow: "hidden", flexShrink: 0, border: `2px solid ${borderColor}`, background: "#1e1710", position: "relative", boxShadow: eliminated ? "none" : `0 0 8px ${tribeColor}55` }}>
       <img
         src={`/images/${img}.webp`}
         alt=""
@@ -540,7 +548,7 @@ function HomePage({ me, state, scores, go, eliminated }) {
                 return (
                   <div key={`${cid}-${Math.random()}`} style={{ background: eliminated?.[cid] ? "rgba(255,255,255,.03)" : "rgba(245,158,11,.05)", border: `1px solid ${eliminated?.[cid] ? "rgba(255,255,255,.1)" : C.bd}`, borderRadius: 4, padding: "10px 12px", opacity: eliminated?.[cid] ? 0.5 : 1 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                      <Headshot img={c?.img} size={44} eliminated={!!eliminated?.[cid]} />
+<Headshot img={c?.img} size={44} eliminated={!!eliminated?.[cid]} tribe={c?.tribe} />
                       <div>
                         <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{c?.name}</div>
                         <div style={{ fontSize: 11, color: C.mu }}>{c?.seasons}</div>
@@ -633,7 +641,7 @@ function DraftPage({ me, state, setMe, fetchState }) {
           return (
 <div key={c.id} onClick={() => toggle(c.id)} style={{ ...S.card, cursor: locked || full ? "not-allowed" : "pointer", padding: "10px 12px", position: "relative", opacity: full ? 0.35 : 1, border: sel ? `1px solid ${C.am}` : `1px solid ${C.bd}`, background: sel ? "rgba(245,158,11,.12)" : "linear-gradient(135deg,#161208,#1e1710)", transition: "all .15s" }}>
   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-    <Headshot img={c.img} size={88} />
+<Headshot img={c.img} size={88} tribe={c.tribe} />
     <div>
       <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{c.name}</div>
       <div style={{ fontSize: 11, color: C.mu }}>{c.seasons}</div>
@@ -744,7 +752,7 @@ function ScoringPage({ state, scores, eliminated }) {
           const on = sel === c.id;
           return (
 <div key={c.id} onClick={() => setSel(on ? null : c.id)} style={{ ...S.card, cursor: "pointer", padding: "10px 12px", border: on ? `1px solid ${C.am}` : eliminated?.[c.id] ? "1px solid rgba(255,255,255,.1)" : `1px solid ${C.bd}`, background: on ? "rgba(245,158,11,.1)" : eliminated?.[c.id] ? "rgba(255,255,255,.03)" : "linear-gradient(135deg,#161208,#1e1710)", opacity: eliminated?.[c.id] ? 0.5 : 1, transition: "all .15s" }}>  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-<Headshot img={c.img} size={80} eliminated={!!eliminated?.[c.id]} />
+<Headshot img={c.img} size={80} eliminated={!!eliminated?.[c.id]} tribe={c.tribe} />
     <div>
       <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{c.name}</div>
       <div style={{ fontSize: 11, color: C.mu }}>{c.seasons}</div>
