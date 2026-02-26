@@ -32,8 +32,8 @@ const SCORING_EVENTS = [
   { id: "voted_off",                label: "Voted Off",                     pts: 0, icon: "💀" },
   { id: "wins_individual_immunity", label: "Wins Individual Immunity",      pts: 5,  icon: "🏆" },
   { id: "wins_reward",              label: "Wins Individual Reward",        pts: 3,  icon: "🎁" },
-  { id: "wins_tribal_immunity",     label: "Wins Team Challenge",           pts: 2,  icon: "⚔️" },
-  { id: "second_tribal_immunity",   label: "2nd Place Team Challenge",      pts: 1, icon: "🥈" },
+  { id: "wins_tribal_immunity",     label: "Team Challenge (1st)",           pts: 2,  icon: "⚔️" },
+  { id: "second_tribal_immunity",   label: "Team Challenge (2nd)",      pts: 1, icon: "🥈" },
   { id: "finds_idol",               label: "Finds Hidden Immunity Idol",    pts: 5,  icon: "🗿" },
   { id: "plays_idol_successfully",  label: "Plays Idol Successfully",       pts: 7,  icon: "✨" },
   { id: "plays_idol_unnecessarily", label: "Plays Idol (No Votes Against)", pts: -5, icon: "💸" },
@@ -83,7 +83,7 @@ function computeScores(state) {
     }
     teamScores[user.username] = { total, breakdown };
   }
-  return { castScores, teamScores };
+    return { castScores, teamScores, eliminated };
 }
 
 function Headshot({ img, size = 44, eliminated = false }) {
@@ -535,7 +535,7 @@ function HomePage({ me, state, scores, go, eliminated }) {
                 const p = ts.breakdown[cid] ?? 0;
                 const draftCount = (state?.users || []).filter(u => (u.picks || []).includes(cid)).length;
                 return (
-                  <div key={`${cid}-${Math.random()}`} style={{ background: "rgba(245,158,11,.05)", border: `1px solid ${C.bd}`, borderRadius: 4, padding: "10px 12px" }}>
+                  <div key={`${cid}-${Math.random()}`} style={{ background: eliminated?.[cid] ? "rgba(255,255,255,.03)" : "rgba(245,158,11,.05)", border: `1px solid ${eliminated?.[cid] ? "rgba(255,255,255,.1)" : C.bd}`, borderRadius: 4, padding: "10px 12px", opacity: eliminated?.[cid] ? 0.5 : 1 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
                       <Headshot img={c?.img} size={44} eliminated={!!eliminated?.[cid]} />
                       <div>
@@ -740,8 +740,7 @@ function ScoringPage({ state, scores, eliminated }) {
           const pts = scores.castScores[c.id] || 0;
           const on = sel === c.id;
           return (
-<div key={c.id} onClick={() => setSel(on ? null : c.id)} style={{ ...S.card, cursor: "pointer", padding: "10px 12px", border: on ? `1px solid ${C.am}` : `1px solid ${C.bd}`, background: on ? "rgba(245,158,11,.1)" : "linear-gradient(135deg,#161208,#1e1710)", transition: "all .15s" }}>
-  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+<div key={c.id} onClick={() => setSel(on ? null : c.id)} style={{ ...S.card, cursor: "pointer", padding: "10px 12px", border: on ? `1px solid ${C.am}` : eliminated?.[c.id] ? "1px solid rgba(255,255,255,.1)" : `1px solid ${C.bd}`, background: on ? "rgba(245,158,11,.1)" : eliminated?.[c.id] ? "rgba(255,255,255,.03)" : "linear-gradient(135deg,#161208,#1e1710)", opacity: eliminated?.[c.id] ? 0.5 : 1, transition: "all .15s" }}>  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
 <Headshot img={c.img} size={80} eliminated={!!eliminated?.[c.id]} />
     <div>
       <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{c.name}</div>
