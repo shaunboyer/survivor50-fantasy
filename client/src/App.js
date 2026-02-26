@@ -29,6 +29,7 @@ const CAST = [
 ];
 
 const SCORING_EVENTS = [
+  { id: "voted_off",                label: "Voted Off",                     pts: 0, icon: "💀" },
   { id: "wins_individual_immunity", label: "Wins Individual Immunity",      pts: 5,  icon: "🏆" },
   { id: "wins_reward",              label: "Wins Individual Reward",        pts: 3,  icon: "🎁" },
   { id: "wins_tribal_immunity",     label: "Wins Team Challenge",           pts: 2,  icon: "⚔️" },
@@ -193,6 +194,52 @@ function PrizesPage({ scores }) {
   );
 }
 
+function ResetRequestPage({ go }) {
+  const [uname, setUname] = useState("");
+  const [msg,   setMsg]   = useState("");
+  const [err,   setErr]   = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function submit() {
+    if (!uname) return setErr("Enter your username.");
+    setLoading(true);
+    try {
+      await api("POST", "/reset-request", { username: uname });
+      setMsg("✅ Reset request sent! The admin will set a temporary password for you shortly.");
+      setErr("");
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div style={S.ctr}>
+      <div style={{ ...S.card, minWidth: 290, maxWidth: 370, width: "100%" }}>
+        <div style={{ fontSize: 22, letterSpacing: 5, color: C.al, textAlign: "center", marginBottom: 5 }}>RESET PASSWORD</div>
+        <div style={{ fontSize: 13, color: C.mu, textAlign: "center", marginBottom: 22 }}>
+          Enter your username and the admin will set a temporary password for you.
+        </div>
+        {msg ? (
+          <div style={{ color: "#4ade80", fontSize: 13, textAlign: "center", marginBottom: 16 }}>{msg}</div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+            <input style={S.inp} placeholder="Username" value={uname} onChange={e => setUname(e.target.value)} onKeyDown={e => e.key === "Enter" && submit()} disabled={loading} />
+            {err && <div style={{ color: "#f87171", fontSize: 13, textAlign: "center" }}>{err}</div>}
+            <button style={{ ...S.btn, opacity: loading ? 0.6 : 1 }} onClick={submit} disabled={loading}>
+              {loading ? "..." : "REQUEST RESET"}
+            </button>
+          </div>
+        )}
+        <div style={{ textAlign: "center", marginTop: 14, fontSize: 13, color: C.mu }}>
+          <button style={S.lnk} onClick={() => go("login")}>← Back to sign in</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── ROOT APP ───────────────────────────────────────────────────────────────
 export default function App() {
   const [me, setMe]         = useState(null);   // { username, isAdmin, picks }
@@ -296,6 +343,7 @@ export default function App() {
       <div style={S.shell}>
         <Nav me={me} page={page} go={setPage} logout={doLogout} isAdmin={isAdmin} />
 
+        {!me && page === "reset" && <ResetRequestPage go={setPage} />}
         {!me && (
           <AuthPanel
             mode={page === "register" ? "register" : "login"}
@@ -393,12 +441,19 @@ function AuthPanel({ mode, uname, setUname, pwd, setPwd, err, setErr, loading, o
             {loading ? "..." : isReg ? "CREATE ACCOUNT" : "SIGN IN"}
           </button>
         </div>
-        <div style={{ textAlign: "center", marginTop: 14, fontSize: 13, color: C.mu }}>
-          {isReg ? "Already registered? " : "New player? "}
-          <button style={S.lnk} onClick={() => { setErr(""); go(isReg ? "login" : "register"); }}>
-            {isReg ? "Sign in" : "Create account"}
-          </button>
-        </div>
+       <div style={{ textAlign: "center", marginTop: 14, fontSize: 13, color: C.mu }}>
+  {isReg ? "Already registered? " : "New player? "}
+  <button style={S.lnk} onClick={() => { setErr(""); go(isReg ? "login" : "register"); }}>
+    {isReg ? "Sign in" : "Create account"}
+  </button>
+</div>
+{!isReg && (
+  <div style={{ textAlign: "center", marginTop: 8, fontSize: 13, color: C.mu }}>
+    <button style={S.lnk} onClick={() => { setErr(""); go("reset"); }}>
+      Forgot password?
+    </button>
+  </div>
+)}
       </div>
     </div>
   );
@@ -728,6 +783,68 @@ function ScoringPage({ state, scores }) {
   );
 }
 
+function ResetRequestsPanel({ fetchState, flash }) {
+  const [requests, setRequests] = useState([]);
+  const [tempPwds, setTempPwds] = useState({});
+  const [loading,  setLoading]  = useState(true);
+
+  async function load() {
+    try {
+      const data = await api("GET", "/admin/reset-requests");
+      setRequests(data.requests);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  }
+
+  useEffect(() => { load(); }, []);
+
+  async function approve(id) {
+    const temp = tempPwds[id];
+    if (!temp) return flash("❌ Enter a temporary password first.");
+    try {
+      await api("POST", `/admin/reset-requests/${id}/approve`, { tempPassword: temp });
+      flash(`✅ Password reset! Temp password: ${temp}`);
+      load();
+    } catch (e) { flash("❌ " + e.message); }
+  }
+
+  async function deny(id) {
+    try {
+      await api("POST", `/admin/reset-requests/${id}/deny`);
+      flash("🗑 Request denied.");
+      load();
+    } catch (e) { flash("❌ " + e.message); }
+  }
+
+  if (loading) return <div style={{ color: C.mu, fontStyle: "italic" }}>Loading…</div>;
+
+  return (
+    <div style={S.card}>
+      <div style={S.cT}>PENDING PASSWORD RESETS</div>
+      {requests.length === 0 && <div style={{ color: C.mu, fontStyle: "italic" }}>No pending requests.</div>}
+      {requests.map(r => (
+        <div key={r.id} style={{ padding: "12px 0", borderBottom: `1px solid ${C.bd}` }}>
+          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>{r.username}</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <input
+              style={{ ...S.inp, maxWidth: 180 }}
+              placeholder="Set temp password…"
+              value={tempPwds[r.id] || ""}
+              onChange={e => setTempPwds(prev => ({ ...prev, [r.id]: e.target.value }))}
+            />
+            <button style={{ ...S.btn, padding: "7px 14px", fontSize: 11 }} onClick={() => approve(r.id)}>
+              APPROVE
+            </button>
+            <button style={{ background: "rgba(248,113,113,.1)", border: "1px solid rgba(248,113,113,.3)", color: "#f87171", cursor: "pointer", borderRadius: 2, padding: "7px 14px", fontSize: 11 }} onClick={() => deny(r.id)}>
+              DENY
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── ADMIN PAGE ─────────────────────────────────────────────────────────────
 function AdminPage({ state, fetchState, me }) {
   const [tab,     setTab]     = useState("log");
@@ -796,9 +913,7 @@ async function deleteUser(username) {
       {toast && <div style={{ position: "fixed", bottom: 22, right: 22, background: "#166534", border: "1px solid #4ade80", color: "#4ade80", padding: "10px 16px", borderRadius: 4, zIndex: 999, fontSize: 14 }}>{toast}</div>}
 
       <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
-{[["log", "Log Events"], ["draft", "Draft Control"], ["history", "Event History"], ["unique", "Uniqueness"]].map(([id, label]) => (          <button key={id} style={{ ...S.nb, ...(tab === id ? S.nba : {}) }} onClick={() => setTab(id)}>{label}</button>
-        ))}
-      </div>
+{[["log", "Log Events"], ["draft", "Draft Control"], ["history", "Event History"], ["unique", "Uniqueness"], ["resets", "Password Resets"]].map(([id, label]) => (      </div>
 
       {/* LOG EVENTS */}
       {tab === "log" && (
@@ -967,6 +1082,11 @@ async function deleteUser(username) {
             ));
           })()}
         </div>
+)}
+
+      {/* PASSWORD RESETS */}
+      {tab === "resets" && (
+        <ResetRequestsPanel fetchState={fetchState} flash={flash} />
       )}
 
     </div>

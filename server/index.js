@@ -36,6 +36,14 @@ db.exec(`
   );
 
   INSERT OR IGNORE INTO settings (key, value) VALUES ('draft_open', '0');
+
+  CREATE TABLE IF NOT EXISTS reset_requests (
+  id TEXT PRIMARY KEY,
+  username TEXT NOT NULL,
+  status TEXT DEFAULT 'pending',
+  temp_password TEXT DEFAULT '',
+  created_at INTEGER DEFAULT (unixepoch())
+  );  
 `);
 
 // ── MIDDLEWARE ─────────────────────────────────────────────────────────────
@@ -88,6 +96,39 @@ app.post("/api/login", (req, res) => {
   }
   const token = jwt.sign({ username: key, isAdmin: !!user.is_admin }, JWT_SECRET, { expiresIn: "30d" });
   res.json({ token, username: key, isAdmin: !!user.is_admin, picks: JSON.parse(user.picks) });
+});
+
+app.post("/api/reset-request", (req, res) => {
+  const { username } = req.body;
+  const key = (username || "").trim().toLowerCase();
+  const user = db.prepare("SELECT username FROM users WHERE username = ?").get(key);
+  if (!user) return res.status(404).json({ error: "Username not found" });
+  const existing = db.prepare("SELECT id FROM reset_requests WHERE username = ? AND status = 'pending'").get(key);
+  if (existing) return res.status(409).json({ error: "A reset request is already pending for this account" });
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+  db.prepare("INSERT INTO reset_requests (id, username) VALUES (?, ?)").run(id, key);
+  res.json({ ok: true });
+});
+
+app.get("/api/admin/reset-requests", auth, adminOnly, (req, res) => {
+  const requests = db.prepare("SELECT * FROM reset_requests WHERE status = 'pending' ORDER BY created_at DESC").all();
+  res.json({ requests });
+});
+
+app.post("/api/admin/reset-requests/:id/approve", auth, adminOnly, (req, res) => {
+  const { tempPassword } = req.body;
+  if (!tempPassword) return res.status(400).json({ error: "Temp password required" });
+  const request = db.prepare("SELECT * FROM reset_requests WHERE id = ?").get(req.params.id);
+  if (!request) return res.status(404).json({ error: "Request not found" });
+  const hash = bcrypt.hashSync(tempPassword, 10);
+  db.prepare("UPDATE users SET password_hash = ? WHERE username = ?").run(hash, request.username);
+  db.prepare("UPDATE reset_requests SET status = 'approved', temp_password = ? WHERE id = ?").run(tempPassword, req.params.id);
+  res.json({ ok: true });
+});
+
+app.post("/api/admin/reset-requests/:id/deny", auth, adminOnly, (req, res) => {
+  db.prepare("UPDATE reset_requests SET status = 'denied' WHERE id = ?").run(req.params.id);
+  res.json({ ok: true });
 });
 
 // ── DRAFT ROUTES ───────────────────────────────────────────────────────────
