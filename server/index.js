@@ -14,12 +14,13 @@ const db = new Database(process.env.DB_PATH || "./survivor50.db");
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
-    username TEXT PRIMARY KEY,
-    password_hash TEXT NOT NULL,
-    is_admin INTEGER DEFAULT 0,
-    picks TEXT DEFAULT '[]',
-    created_at INTEGER DEFAULT (unixepoch())
-  );
+      username TEXT PRIMARY KEY,
+      password_hash TEXT NOT NULL,
+      is_admin INTEGER DEFAULT 0,
+      picks TEXT DEFAULT '[]',
+      playing_for_money INTEGER DEFAULT 0,
+      created_at INTEGER DEFAULT (unixepoch())
+    );
 
   CREATE TABLE IF NOT EXISTS events (
     id TEXT PRIMARY KEY,
@@ -153,6 +154,12 @@ app.post("/api/admin/reset-picks", auth, adminOnly, (req, res) => {
   res.json({ ok: true });
 });
 
+app.post("/api/admin/playing-for-money", auth, adminOnly, (req, res) => {
+  const { username, value } = req.body;
+  db.prepare("UPDATE users SET playing_for_money = ? WHERE username = ?").run(value ? 1 : 0, username);
+  res.json({ ok: true });
+});
+
 app.delete("/api/admin/users/:username", auth, adminOnly, (req, res) => {
   const { username } = req.params;
   db.prepare("DELETE FROM users WHERE username = ?").run(username);
@@ -162,10 +169,11 @@ app.delete("/api/admin/users/:username", auth, adminOnly, (req, res) => {
 // ── LEADERBOARD / SCORES ───────────────────────────────────────────────────
 app.get("/api/state", auth, (req, res) => {
   const draftOpen = db.prepare("SELECT value FROM settings WHERE key = 'draft_open'").get()?.value === "1";
-  const users = db.prepare("SELECT username, is_admin, picks FROM users").all().map(u => ({
+  const users = db.prepare("SELECT username, is_admin, picks, playing_for_money FROM users").all().map(u => ({
     username: u.username,
     isAdmin: !!u.is_admin,
     picks: JSON.parse(u.picks),
+    playingForMoney: !!u.playing_for_money,
   }));
   const events = db.prepare("SELECT * FROM events ORDER BY created_at ASC").all().map(e => ({
     id: e.id,

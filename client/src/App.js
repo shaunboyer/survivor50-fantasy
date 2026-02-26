@@ -687,9 +687,10 @@ function LeaderboardPage({ me, state, scores }) {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <span style={{ fontSize: 20, minWidth: 28 }}>{medals[i] || `${i + 1}.`}</span>
-                  <span style={{ fontSize: 15, fontWeight: 700 }}>
+<span style={{ fontSize: 15, fontWeight: 700 }}>
                     {uname}
                     {isMe && <span style={{ color: C.am, fontSize: 11, marginLeft: 7 }}>(you)</span>}
+                    {user?.playingForMoney && <span style={{ fontSize: 10, marginLeft: 8, background: "rgba(74,222,128,.15)", border: "1px solid rgba(74,222,128,.4)", color: "#4ade80", borderRadius: 3, padding: "1px 6px", letterSpacing: 1 }}>💰 MONEY</span>}
                   </span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -885,6 +886,14 @@ function AdminPage({ state, fetchState, me }) {
     finally { setBusy(false); }
   }
 
+  async function toggleMoney(username, value) {
+  try {
+    await api("POST", "/admin/playing-for-money", { username, value });
+    await fetchState();
+    flash(`💰 ${username} ${value ? "marked" : "unmarked"} as playing for money.`);
+  } catch (e) { flash("❌ " + e.message); }
+}
+
   async function deleteEvent(id) {
     try {
       await api("DELETE", `/admin/events/${id}`);
@@ -1004,9 +1013,15 @@ async function deleteUser(username) {
   <div key={u.username} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:`1px solid ${C.bd}`, fontSize:14 }}>
     <span>{u.username}</span>
     <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-      <span style={{ color:(u.picks?.length||0) === 8 ? "#4ade80" : C.mu }}>
+<span style={{ color:(u.picks?.length||0) === 8 ? "#4ade80" : C.mu }}>
         {u.picks?.length||0}/8 {(u.picks?.length||0) === 8 ? "✓" : ""}
       </span>
+      <button
+        style={{ background: u.playingForMoney ? "rgba(74,222,128,.2)" : "rgba(255,255,255,.05)", border: `1px solid ${u.playingForMoney ? "rgba(74,222,128,.5)" : "rgba(255,255,255,.15)"}`, color: u.playingForMoney ? "#4ade80" : C.mu, cursor: "pointer", borderRadius: 2, padding: "2px 8px", fontSize: 11 }}
+        onClick={() => toggleMoney(u.username, !u.playingForMoney)}
+      >
+        💰
+      </button>
 <button
   style={{ background:"rgba(248,113,113,.1)", border:"1px solid rgba(248,113,113,.3)", color:"#f87171", cursor:"pointer", borderRadius:2, padding:"2px 8px", fontSize:11 }}
   onClick={() => { if(window.confirm(`Clear ${u.username}'s team?`)) resetPicks(u.username); }}
