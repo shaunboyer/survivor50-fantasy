@@ -95,6 +95,25 @@ function computeScores(state) {
     return { castScores, teamScores, eliminated };
 }
 
+function getEpisodeMVP(state) {
+  if (!state || !state.events || state.events.length === 0) return null;
+  const maxEpisode = Math.max(...state.events.map(e => e.episode));
+  const epEvents = state.events.filter(e => e.episode === maxEpisode);
+  const epScores = {};
+  for (const ev of epEvents) {
+    const def = SCORING_EVENTS.find(s => s.id === ev.eventId);
+    if (def && def.pts > 0) epScores[ev.castId] = (epScores[ev.castId] || 0) + def.pts;
+  }
+  const entries = Object.entries(epScores);
+  if (entries.length === 0) return null;
+  const [topCastId, topPts] = entries.sort((a, b) => b[1] - a[1])[0];
+  const castaway = CAST.find(c => c.id === parseInt(topCastId));
+  const drafters = (state.users || [])
+    .filter(u => (u.picks || []).includes(parseInt(topCastId)))
+    .map(u => u.username);
+  return { castaway, pts: topPts, episode: maxEpisode, drafters };
+}
+
 function Headshot({ img, size = 44, eliminated = false, tribe }) {
   const tribeColor = TRIBE_COLORS[tribe] || "rgba(245,158,11,.3)";
   const borderColor = eliminated ? "rgba(255,255,255,.15)" : tribeColor;
@@ -532,6 +551,27 @@ function HomePage({ me, state, scores, go, eliminated }) {
         <StatCard icon="🌴" label="DRAFTED"   val={`${picks.length} / 8`} />
         <StatCard icon="📋" label="DRAFT"     val={state?.draftOpen ? "OPEN" : "CLOSED"} color={state?.draftOpen ? "#4ade80" : "#f87171"} />
       </div>
+
+      {(() => {
+        const mvp = getEpisodeMVP(state);
+        if (!mvp || !mvp.castaway) return null;
+        return (
+          <div style={{ ...S.card, marginBottom: 20, borderColor: C.bb, background: "rgba(245,158,11,.08)" }}>
+            <div style={S.cT}>⭐ Episode {mvp.episode} MVP</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <Headshot img={mvp.castaway.img} size={56} tribe={mvp.castaway.tribe} />
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 3 }}>{mvp.castaway.name}</div>
+                <div style={{ fontSize: 22, color: C.al, fontWeight: 700, marginBottom: 4 }}>+{mvp.pts} pts this episode</div>
+                {mvp.drafters.length > 0
+                  ? <div style={{ fontSize: 12, color: C.mu }}>Drafted by: {mvp.drafters.join(", ")}</div>
+                  : <div style={{ fontSize: 12, color: C.mu }}>Not drafted by anyone</div>
+                }
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {picks.length < 8 && state?.draftOpen && (
         <div style={S.callout}>⚠️ You haven't drafted your team yet! <button style={S.lnk} onClick={() => go("draft")}>Draft Now →</button></div>
