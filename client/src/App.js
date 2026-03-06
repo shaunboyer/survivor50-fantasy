@@ -584,27 +584,6 @@ function HomePage({ me, state, scores, go, eliminated }) {
         </div>
       )}
 
-      {(() => {
-        const mvp = getEpisodeMVP(state);
-        if (!mvp || !mvp.castaway) return null;
-        return (
-          <div style={{ ...S.card, marginTop: 20, borderColor: C.bb, background: "rgba(245,158,11,.08)" }}>
-            <div style={S.cT}>⭐ Episode {mvp.episode} MVP</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <Headshot img={mvp.castaway.img} size={56} tribe={mvp.castaway.tribe} />
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 3 }}>{mvp.castaway.name}</div>
-                <div style={{ fontSize: 22, color: C.al, fontWeight: 700, marginBottom: 4 }}>+{mvp.pts} pts this episode</div>
-                {mvp.drafters.length > 0
-                  ? <div style={{ fontSize: 12, color: C.mu }}>Drafted by: {mvp.drafters.join(", ")}</div>
-                  : <div style={{ fontSize: 12, color: C.mu }}>Not drafted by anyone</div>
-                }
-              </div>
-            </div>
-          </div>
-        );
-      })()}
-
             <EpisodeCountdown />
 
     </div>
@@ -977,6 +956,27 @@ function ScoringPage({ state, scores, eliminated }) {
   return (
     <div style={S.wrap}>
       <div style={S.ph}><div style={S.pt}>CASTAWAY SCORES</div><div style={S.ps}>Click any castaway to see their event history.</div></div>
+
+      {(() => {
+        const mvp = getEpisodeMVP(state);
+        if (!mvp || !mvp.castaway) return null;
+        return (
+          <div style={{ ...S.card, marginBottom: 20, borderColor: C.bb, background: "rgba(245,158,11,.08)" }}>
+            <div style={S.cT}>⭐ Episode {mvp.episode} MVP</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <Headshot img={mvp.castaway.img} size={56} tribe={mvp.castaway.tribe} />
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 3 }}>{mvp.castaway.name}</div>
+                <div style={{ fontSize: 22, color: C.al, fontWeight: 700, marginBottom: 4 }}>+{mvp.pts} pts this episode</div>
+                {mvp.drafters.length > 0
+                  ? <div style={{ fontSize: 12, color: C.mu }}>Drafted by: {mvp.drafters.join(", ")}</div>
+                  : <div style={{ fontSize: 12, color: C.mu }}>Not drafted by anyone</div>
+                }
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(185px,1fr))", gap: 9, marginBottom: 20 }}>
         {sorted.map(c => {
