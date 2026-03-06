@@ -836,33 +836,42 @@ function PerformanceChart({ state, eliminated }) {
   const xScale = ep => ML + ((ep - 1) / (TOTAL_EPS - 1)) * chartW;
   const yScale = val => MT + chartH - ((val - minY) / (maxY - minY)) * chartH;
 
-  // Deconflict overlapping headshots — spread them vertically within each episode column
+  // Deconflict overlapping headshots — spread them horizontally when too close
   const adjustedPos = (() => {
-    const R = 13; // circle radius + 1px gap
+    const R = 13;
+    const MIN_DIST = R * 2 + 1;
     const byLastEp = {};
     series.filter(s => s.lastEp > 0).forEach(s => {
       if (!byLastEp[s.lastEp]) byLastEp[s.lastEp] = [];
-      byLastEp[s.lastEp].push({ id: s.cast.id, y: yScale(s.lastVal) });
+      byLastEp[s.lastEp].push({ id: s.cast.id, x: xScale(s.lastEp), y: yScale(s.lastVal) });
     });
     const result = {};
     Object.entries(byLastEp).forEach(([epStr, group]) => {
-      const hx = xScale(parseInt(epStr));
-      group.sort((a, b) => a.y - b.y);
-      // Iteratively push overlapping items apart
-      for (let iter = 0; iter < 60; iter++) {
-        for (let i = 0; i < group.length - 1; i++) {
-          const gap = group[i + 1].y - group[i].y;
-          if (gap < R * 2) {
-            const shift = (R * 2 - gap) / 2 + 0.5;
-            group[i].y -= shift;
-            group[i + 1].y += shift;
+      // Iteratively push overlapping items apart in x only
+      for (let iter = 0; iter < 100; iter++) {
+        let moved = false;
+        for (let i = 0; i < group.length; i++) {
+          for (let j = i + 1; j < group.length; j++) {
+            const dx = group[j].x - group[i].x;
+            const dy = group[j].y - group[i].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < MIN_DIST) {
+              const push = (MIN_DIST - dist) / 2 + 0.1;
+              if (group[i].x <= group[j].x) {
+                group[i].x -= push;
+                group[j].x += push;
+              } else {
+                group[i].x += push;
+                group[j].x -= push;
+              }
+              moved = true;
+            }
           }
         }
+        if (!moved) break;
       }
-      // Clamp within chart area
       group.forEach(p => {
-        p.y = Math.max(MT + R, Math.min(MT + chartH - R, p.y));
-        result[p.id] = { hx, hy: p.y };
+        result[p.id] = { hx: p.x, hy: p.y };
       });
     });
     return result;
