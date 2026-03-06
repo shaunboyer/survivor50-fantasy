@@ -964,9 +964,6 @@ function PerformanceChart({ state, eliminated }) {
           </svg>
         </div>
       )}
-      <div style={{ fontSize: 11, color: C.mu, marginTop: 10, textAlign: "center", letterSpacing: 1 }}>
-        Grey lines = eliminated · Headshots mark each player's last active episode
-      </div>
     </div>
   );
 }
