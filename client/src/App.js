@@ -836,6 +836,38 @@ function PerformanceChart({ state, eliminated }) {
   const xScale = ep => ML + ((ep - 1) / (TOTAL_EPS - 1)) * chartW;
   const yScale = val => MT + chartH - ((val - minY) / (maxY - minY)) * chartH;
 
+  // Deconflict overlapping headshots — spread them vertically within each episode column
+  const adjustedPos = (() => {
+    const R = 13; // circle radius + 1px gap
+    const byLastEp = {};
+    series.filter(s => s.lastEp > 0).forEach(s => {
+      if (!byLastEp[s.lastEp]) byLastEp[s.lastEp] = [];
+      byLastEp[s.lastEp].push({ id: s.cast.id, y: yScale(s.lastVal) });
+    });
+    const result = {};
+    Object.entries(byLastEp).forEach(([epStr, group]) => {
+      const hx = xScale(parseInt(epStr));
+      group.sort((a, b) => a.y - b.y);
+      // Iteratively push overlapping items apart
+      for (let iter = 0; iter < 60; iter++) {
+        for (let i = 0; i < group.length - 1; i++) {
+          const gap = group[i + 1].y - group[i].y;
+          if (gap < R * 2) {
+            const shift = (R * 2 - gap) / 2 + 0.5;
+            group[i].y -= shift;
+            group[i + 1].y += shift;
+          }
+        }
+      }
+      // Clamp within chart area
+      group.forEach(p => {
+        p.y = Math.max(MT + R, Math.min(MT + chartH - R, p.y));
+        result[p.id] = { hx, hy: p.y };
+      });
+    });
+    return result;
+  })();
+
   return (
     <div style={{ ...S.card, marginBottom: 20 }}>
       <div style={S.cT}>📈 CASTAWAY PERFORMANCE — CUMULATIVE POINTS</div>
@@ -849,7 +881,7 @@ function PerformanceChart({ state, eliminated }) {
             <defs>
               {series.map(s => (
                 <clipPath key={s.cast.id} id={`hc-${s.cast.id}`}>
-                  <circle cx="0" cy="0" r="10" />
+                  <circle cx="0" cy="0" r="11" />
                 </clipPath>
               ))}
             </defs>
@@ -894,8 +926,9 @@ function PerformanceChart({ state, eliminated }) {
               }
               if (points.length === 0) return null;
               const lineColor = s.isElim ? "rgba(255,255,255,.18)" : s.color;
-              const hx = s.lastEp > 0 ? xScale(s.lastEp) : null;
-              const hy = s.lastEp > 0 ? yScale(s.lastVal) : null;
+              const adj = adjustedPos[s.cast.id];
+              const hx = adj?.hx ?? null;
+              const hy = adj?.hy ?? null;
               return (
                 <g key={s.cast.id}>
                   <polyline
@@ -906,10 +939,11 @@ function PerformanceChart({ state, eliminated }) {
                   />
                   {hx !== null && (
                     <g transform={`translate(${hx},${hy})`}>
-                      <circle r={11} fill={s.isElim ? "rgba(60,60,60,.8)" : lineColor} />
+                      <circle r={12} fill={s.isElim ? "rgba(40,40,40,.9)" : lineColor} />
                       <image
                         href={`/images/${s.cast.img}.webp`}
-                        x={-10} y={-10} width={20} height={20}
+                        x={-11} y={-11} width={22} height={22}
+                        preserveAspectRatio="xMidYMid slice"
                         clipPath={`url(#hc-${s.cast.id})`}
                         style={{ filter: s.isElim ? "grayscale(100%) brightness(0.4)" : "none" }}
                       />
