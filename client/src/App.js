@@ -777,6 +777,157 @@ function LeaderboardPage({ me, state, scores }) {
   );
 }
 
+// ── PERFORMANCE CHART ──────────────────────────────────────────────────────
+function PerformanceChart({ state, eliminated }) {
+  const TOTAL_EPS = 13;
+  const W = 900, H = 420;
+  const ML = 45, MR = 115, MT = 15, MB = 35;
+  const chartW = W - ML - MR;
+  const chartH = H - MT - MB;
+
+  const CHART_COLORS = [
+    "#ff6b6b","#ffa94d","#ffd43b","#a9e34b","#69db7c","#38d9a9",
+    "#4dabf7","#748ffc","#da77f2","#f783ac","#ff8c00","#ffe066",
+    "#63e6be","#a5d8ff","#bac8ff","#eebefa","#fcc2d7","#c0eb75",
+    "#ffec99","#b2f2bb","#ff99a0","#fa5252","#99ccff","#d0bfff",
+  ];
+
+  const epPts = {};
+  for (const ev of (state?.events || [])) {
+    const def = SCORING_EVENTS.find(s => s.id === ev.eventId);
+    if (!def) continue;
+    if (!epPts[ev.castId]) epPts[ev.castId] = {};
+    epPts[ev.castId][ev.episode] = (epPts[ev.castId][ev.episode] || 0) + def.pts;
+  }
+
+  const allEps = (state?.events || []).map(e => e.episode);
+  const maxEp = allEps.length > 0 ? Math.max(...allEps) : 0;
+
+  const elimEps = {};
+  for (const ev of (state?.events || [])) {
+    if (ev.eventId === "voted_off") elimEps[ev.castId] = ev.episode;
+  }
+
+  const series = CAST.map((c, i) => {
+    const color = CHART_COLORS[i % CHART_COLORS.length];
+    const elimEp = elimEps[c.id];
+    const isElim = !!eliminated?.[c.id];
+    let cumulative = 0;
+    const pts = [];
+    for (let ep = 1; ep <= TOTAL_EPS; ep++) {
+      if (ep > maxEp || (elimEp && ep > elimEp)) {
+        pts.push(null);
+      } else {
+        cumulative += (epPts[c.id]?.[ep] || 0);
+        pts.push(cumulative);
+      }
+    }
+    let lastEp = 0, lastVal = 0;
+    for (let ep = TOTAL_EPS; ep >= 1; ep--) {
+      if (pts[ep - 1] !== null) { lastEp = ep; lastVal = pts[ep - 1]; break; }
+    }
+    return { cast: c, pts, color, isElim, lastEp, lastVal };
+  });
+
+  const allVals = series.flatMap(s => s.pts.filter(p => p !== null));
+  const minY = Math.min(0, ...(allVals.length ? allVals : [0]));
+  const maxY = Math.max(5, ...(allVals.length ? allVals : [5]));
+
+  const xScale = ep => ML + ((ep - 1) / (TOTAL_EPS - 1)) * chartW;
+  const yScale = val => MT + chartH - ((val - minY) / (maxY - minY)) * chartH;
+
+  return (
+    <div style={{ ...S.card, marginBottom: 20 }}>
+      <div style={S.cT}>📈 CASTAWAY PERFORMANCE — CUMULATIVE POINTS</div>
+      {maxEp === 0 ? (
+        <div style={{ textAlign: "center", color: C.mu, fontStyle: "italic", padding: "24px 0" }}>
+          No events logged yet. The chart will populate after the first episode.
+        </div>
+      ) : (
+        <div style={{ overflowX: "auto" }}>
+          <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", minWidth: 560, display: "block" }}>
+            <defs>
+              {series.map(s => (
+                <clipPath key={s.cast.id} id={`hc-${s.cast.id}`}>
+                  <circle cx="0" cy="0" r="10" />
+                </clipPath>
+              ))}
+            </defs>
+
+            {/* Y grid + labels */}
+            {Array.from({ length: 6 }, (_, i) => {
+              const t = i / 5;
+              const val = Math.round(minY + (maxY - minY) * t);
+              const y = MT + chartH * (1 - t);
+              return (
+                <g key={i}>
+                  <line x1={ML} y1={y} x2={ML + chartW} y2={y} stroke="rgba(245,158,11,.08)" strokeWidth={1} />
+                  <text x={ML - 6} y={y + 4} textAnchor="end" fill="#8a7355" fontSize={10}>{val}</text>
+                </g>
+              );
+            })}
+
+            {/* X axis ticks + labels */}
+            {Array.from({ length: TOTAL_EPS }, (_, i) => {
+              const ep = i + 1;
+              const x = xScale(ep);
+              return (
+                <g key={ep}>
+                  <line x1={x} y1={MT} x2={x} y2={MT + chartH} stroke="rgba(245,158,11,.05)" strokeWidth={1} />
+                  <text x={x} y={H - MB + 16} textAnchor="middle" fill={ep <= maxEp ? "#8a7355" : "rgba(138,115,85,.35)"} fontSize={10}>{ep}</text>
+                </g>
+              );
+            })}
+
+            {/* Axis borders */}
+            <line x1={ML} y1={MT} x2={ML} y2={MT + chartH} stroke="rgba(245,158,11,.2)" strokeWidth={1} />
+            <line x1={ML} y1={MT + chartH} x2={ML + chartW} y2={MT + chartH} stroke="rgba(245,158,11,.2)" strokeWidth={1} />
+
+            {/* Axis label */}
+            <text x={ML + chartW / 2} y={H - 2} textAnchor="middle" fill="#8a7355" fontSize={9} letterSpacing={2}>EPISODE</text>
+
+            {/* Lines — draw eliminated under active */}
+            {[...series].sort((a, b) => (b.isElim ? -1 : 1) - (a.isElim ? -1 : 1)).map(s => {
+              const points = [];
+              for (let ep = 1; ep <= TOTAL_EPS; ep++) {
+                if (s.pts[ep - 1] !== null) points.push([xScale(ep), yScale(s.pts[ep - 1])]);
+              }
+              if (points.length === 0) return null;
+              const lineColor = s.isElim ? "rgba(255,255,255,.18)" : s.color;
+              const hx = s.lastEp > 0 ? xScale(s.lastEp) : null;
+              const hy = s.lastEp > 0 ? yScale(s.lastVal) : null;
+              return (
+                <g key={s.cast.id}>
+                  <polyline
+                    points={points.map(([x, y]) => `${x},${y}`).join(" ")}
+                    fill="none"
+                    stroke={lineColor}
+                    strokeWidth={s.isElim ? 1 : 1.8}
+                  />
+                  {hx !== null && (
+                    <g transform={`translate(${hx},${hy})`}>
+                      <circle r={11} fill={s.isElim ? "rgba(60,60,60,.8)" : lineColor} />
+                      <image
+                        href={`/images/${s.cast.img}.webp`}
+                        x={-10} y={-10} width={20} height={20}
+                        clipPath={`url(#hc-${s.cast.id})`}
+                        style={{ filter: s.isElim ? "grayscale(100%) brightness(0.4)" : "none" }}
+                      />
+                    </g>
+                  )}
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+      )}
+      <div style={{ fontSize: 11, color: C.mu, marginTop: 10, textAlign: "center", letterSpacing: 1 }}>
+        Grey lines = eliminated · Headshots mark each player's last active episode
+      </div>
+    </div>
+  );
+}
+
 // ── SCORING PAGE ───────────────────────────────────────────────────────────
 function ScoringPage({ state, scores, eliminated }) {
   const [sel, setSel] = useState(null);
@@ -825,6 +976,8 @@ function ScoringPage({ state, scores, eliminated }) {
               })}
         </div>
       )}
+
+      <PerformanceChart state={state} eliminated={eliminated} />
 
       <div style={S.card}>
         <div style={S.cT}>SCORING REFERENCE</div>
