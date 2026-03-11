@@ -1096,14 +1096,22 @@ function ResetRequestsPanel({ fetchState, flash }) {
 
 // ── ADMIN PAGE ─────────────────────────────────────────────────────────────
 function AdminPage({ state, fetchState, me }) {
-  const [tab,     setTab]     = useState("log");
-  const [castSel, setCastSel] = useState(null);
-  const [evtSel,  setEvtSel]  = useState(null);
-  const [episode, setEpisode] = useState(1);
-  const [note,    setNote]    = useState("");
-  const [q,       setQ]       = useState("");
-  const [toast,   setToast]   = useState("");
-  const [busy,    setBusy]    = useState(false);
+  const [tab,       setTab]       = useState("log");
+  const [logMode,   setLogMode]   = useState("individual"); // "individual" | "tribe"
+  const [castSel,   setCastSel]   = useState(null);
+  const [tribeSel,  setTribeSel]  = useState(null);
+  const [evtSel,    setEvtSel]    = useState(null);
+  const [episode,   setEpisode]   = useState(1);
+  const [note,      setNote]      = useState("");
+  const [q,         setQ]         = useState("");
+  const [toast,     setToast]     = useState("");
+  const [busy,      setBusy]      = useState(false);
+
+  // Compute eliminated from events so we can filter tribe members
+  const eliminated = {};
+  for (const ev of (state?.events || [])) {
+    if (ev.eventId === "voted_off") eliminated[ev.castId] = true;
+  }
 
   function flash(m) { setToast(m); setTimeout(() => setToast(""), 2500); }
 
@@ -1114,6 +1122,22 @@ function AdminPage({ state, fetchState, me }) {
       await api("POST", "/admin/events", { castId: castSel, eventId: evtSel, episode, note });
       await fetchState();
       flash("✅ Event logged!");
+      setNote("");
+    } catch (e) { flash("❌ " + e.message); }
+    finally { setBusy(false); }
+  }
+
+  async function logTribeEvent() {
+    if (!tribeSel || !evtSel) return;
+    const members = CAST.filter(c => c.tribe === tribeSel && !eliminated[c.id]);
+    if (members.length === 0) return;
+    setBusy(true);
+    try {
+      for (const c of members) {
+        await api("POST", "/admin/events", { castId: c.id, eventId: evtSel, episode, note });
+      }
+      await fetchState();
+      flash(`✅ Event logged for ${members.length} castaways!`);
       setNote("");
     } catch (e) { flash("❌ " + e.message); }
     finally { setBusy(false); }
@@ -1177,20 +1201,58 @@ async function deleteUser(username) {
       {/* LOG EVENTS */}
       {tab === "log" && (
         <div>
-          <div style={{ fontSize: 13, color: C.mu, marginBottom: 12 }}>Select a castaway and event type, then click LOG EVENT.</div>
+          {/* Mode toggle */}
+          <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+            {[["individual", "👤 Individual"], ["tribe", "🏝 Tribe"]].map(([id, label]) => (
+              <button key={id} style={{ ...S.nb, ...(logMode === id ? S.nba : {}) }} onClick={() => { setLogMode(id); setCastSel(null); setTribeSel(null); }}>{label}</button>
+            ))}
+          </div>
+
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={S.lbl}>CASTAWAY</div>
-              <input style={{ ...S.inp, marginBottom: 6 }} placeholder="Search…" value={q} onChange={e => setQ(e.target.value)} />
-              <div style={{ background: "#161208", border: `1px solid ${C.bd}`, borderRadius: 4, maxHeight: 300, overflowY: "auto" }}>
-                {shownCast.map(c => (
-                  <div key={c.id} onClick={() => setCastSel(c.id)} style={{ padding: "8px 12px", borderBottom: `1px solid rgba(245,158,11,.07)`, cursor: "pointer", fontSize: 13, background: castSel === c.id ? "rgba(245,158,11,.12)" : "transparent", color: castSel === c.id ? C.al : C.tx }}>
-                    <div style={{ fontWeight: 600 }}>{c.name}</div>
-                    <div style={{ fontSize: 11, color: C.mu }}>{c.seasons}</div>
-                  </div>
-                ))}
+
+            {/* Individual mode — castaway picker */}
+            {logMode === "individual" && (
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <div style={S.lbl}>CASTAWAY</div>
+                <input style={{ ...S.inp, marginBottom: 6 }} placeholder="Search…" value={q} onChange={e => setQ(e.target.value)} />
+                <div style={{ background: "#161208", border: `1px solid ${C.bd}`, borderRadius: 4, maxHeight: 300, overflowY: "auto" }}>
+                  {shownCast.map(c => (
+                    <div key={c.id} onClick={() => setCastSel(c.id)} style={{ padding: "8px 12px", borderBottom: `1px solid rgba(245,158,11,.07)`, cursor: "pointer", fontSize: 13, background: castSel === c.id ? "rgba(245,158,11,.12)" : "transparent", color: castSel === c.id ? C.al : C.tx }}>
+                      <div style={{ fontWeight: 600 }}>{c.name}</div>
+                      <div style={{ fontSize: 11, color: C.mu }}>{c.seasons}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Tribe mode — tribe picker */}
+            {logMode === "tribe" && (
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <div style={S.lbl}>SELECT TRIBE</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
+                  {Object.entries(TRIBE_COLORS).map(([tribeId, color]) => {
+                    const activeMembers = CAST.filter(c => c.tribe === tribeId && !eliminated[c.id]);
+                    const sel = tribeSel === tribeId;
+                    return (
+                      <div key={tribeId} onClick={() => setTribeSel(tribeId)} style={{ border: `1px solid ${sel ? color : "rgba(255,255,255,.1)"}`, borderRadius: 4, padding: "10px 14px", cursor: "pointer", background: sel ? `${color}18` : "rgba(255,255,255,.02)", transition: "all .15s" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: sel ? 8 : 0 }}>
+                          <span style={{ fontWeight: 700, fontSize: 14, color: sel ? color : C.tx, textTransform: "uppercase", letterSpacing: 2 }}>{tribeId}</span>
+                          <span style={{ fontSize: 12, color: C.mu }}>{activeMembers.length} active</span>
+                        </div>
+                        {sel && (
+                          <div style={{ fontSize: 12, color: C.mu, lineHeight: 1.7 }}>
+                            {activeMembers.map(c => c.name).join(" · ")}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Event type picker — shared */}
             <div style={{ flex: 1, minWidth: 200 }}>
               <div style={S.lbl}>EVENT TYPE</div>
               <div style={{ background: "#161208", border: `1px solid ${C.bd}`, borderRadius: 4, overflow: "hidden" }}>
@@ -1204,6 +1266,7 @@ async function deleteUser(username) {
             </div>
           </div>
 
+          {/* Episode / note / submit */}
           <div style={{ ...S.card, marginTop: 16 }}>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
               <div>
@@ -1214,16 +1277,34 @@ async function deleteUser(username) {
                 <div style={S.lbl}>NOTE (optional)</div>
                 <input style={S.inp} placeholder="e.g. played on Cirie" value={note} onChange={e => setNote(e.target.value)} />
               </div>
-              <button style={{ ...S.btn, opacity: castSel && evtSel && !busy ? 1 : 0.35 }} onClick={logEvent} disabled={!castSel || !evtSel || busy}>
-                {busy ? "SAVING…" : "LOG EVENT"}
-              </button>
+              {logMode === "individual" ? (
+                <button style={{ ...S.btn, opacity: castSel && evtSel && !busy ? 1 : 0.35 }} onClick={logEvent} disabled={!castSel || !evtSel || busy}>
+                  {busy ? "SAVING…" : "LOG EVENT"}
+                </button>
+              ) : (
+                <button style={{ ...S.btn, opacity: tribeSel && evtSel && !busy ? 1 : 0.35 }} onClick={logTribeEvent} disabled={!tribeSel || !evtSel || busy}>
+                  {busy ? "SAVING…" : "LOG FOR TRIBE"}
+                </button>
+              )}
             </div>
-            {castSel && evtSel && (
+
+            {/* Preview */}
+            {logMode === "individual" && castSel && evtSel && (
               <div style={{ marginTop: 11, fontSize: 13, color: C.tx, paddingTop: 11, borderTop: `1px solid ${C.bd}` }}>
                 Will log: <strong style={{ color: C.al }}>{castObj?.name}</strong> — {evtObj?.icon} {evtObj?.label}{" "}
                 (<span style={{ color: (evtObj?.pts || 0) >= 0 ? "#4ade80" : "#f87171" }}>{(evtObj?.pts || 0) > 0 ? `+${evtObj.pts}` : evtObj?.pts} pts</span>) · Episode {episode}
               </div>
             )}
+            {logMode === "tribe" && tribeSel && evtSel && (() => {
+              const members = CAST.filter(c => c.tribe === tribeSel && !eliminated[c.id]);
+              return (
+                <div style={{ marginTop: 11, fontSize: 13, color: C.tx, paddingTop: 11, borderTop: `1px solid ${C.bd}` }}>
+                  Will log <strong style={{ color: C.al }}>{evtObj?.icon} {evtObj?.label}</strong>{" "}
+                  (<span style={{ color: (evtObj?.pts || 0) >= 0 ? "#4ade80" : "#f87171" }}>{(evtObj?.pts || 0) > 0 ? `+${evtObj.pts}` : evtObj?.pts} pts</span>) for{" "}
+                  <strong style={{ color: TRIBE_COLORS[tribeSel] }}>{members.length} {tribeSel} castaways</strong> · Episode {episode}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
