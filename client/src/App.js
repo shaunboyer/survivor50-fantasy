@@ -376,7 +376,7 @@ export default function App() {
     <div style={S.root}>
       <Bg />
       <div style={S.shell}>
-        <Nav me={me} page={page} go={setPage} logout={doLogout} isAdmin={isAdmin} />
+        <Nav me={me} page={page} go={setPage} logout={doLogout} isAdmin={isAdmin} draftOpen={state?.draftOpen} />
 
         {!me && page === "reset" && <ResetRequestPage go={setPage} />}
         {!me && (
@@ -425,10 +425,10 @@ function Bg() {
 }
 
 // ── NAV ────────────────────────────────────────────────────────────────────
-function Nav({ me, page, go, logout, isAdmin }) {
+function Nav({ me, page, go, logout, isAdmin, draftOpen }) {
   const items = me ? [
     { id: "home", label: "Home" },
-    { id: "draft", label: "My Team" },
+    ...(draftOpen ? [{ id: "draft", label: "My Team" }] : []),
     { id: "leaderboard", label: "Standings" },
     { id: "scoring", label: "Scores" },
     { id: "prizes", label: "Prizes" },
