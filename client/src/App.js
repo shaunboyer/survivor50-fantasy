@@ -758,6 +758,7 @@ function LeaderboardPage({ me, state, scores }) {
 
 // ── PERFORMANCE CHART ──────────────────────────────────────────────────────
 function PerformanceChart({ state, eliminated }) {
+  const [view, setView] = useState("chart");
   const TOTAL_EPS = 13;
   const W = 900, H = 420;
   const ML = 45, MR = 115, MT = 15, MB = 35;
@@ -856,12 +857,70 @@ function PerformanceChart({ state, eliminated }) {
     return result;
   })();
 
+  // Per-episode points for the table view
+  const tableRows = [...CAST].map(c => {
+    let total = 0;
+    const eps = Array.from({ length: TOTAL_EPS }, (_, i) => {
+      const ep = i + 1;
+      const pts = epPts[c.id]?.[ep] ?? null;
+      if (pts !== null) total += pts;
+      return pts;
+    });
+    return { cast: c, eps, total, isElim: !!eliminated?.[c.id] };
+  }).sort((a, b) => b.total - a.total);
+
   return (
     <div style={{ ...S.card, marginBottom: 20 }}>
-      <div style={S.cT}>📈 CASTAWAY PERFORMANCE — CUMULATIVE POINTS</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 11, paddingBottom: 7, borderBottom: `1px solid ${C.bd}` }}>
+        <span style={{ fontSize: 11, letterSpacing: 3, color: C.am, textTransform: "uppercase" }}>📈 CASTAWAY PERFORMANCE</span>
+        <div style={{ display: "flex", gap: 5 }}>
+          {[["chart", "Chart"], ["table", "Table"]].map(([id, label]) => (
+            <button key={id} style={{ ...S.nb, fontSize: 11, padding: "3px 10px", ...(view === id ? S.nba : {}) }} onClick={() => setView(id)}>{label}</button>
+          ))}
+        </div>
+      </div>
+
       {maxEp === 0 ? (
         <div style={{ textAlign: "center", color: C.mu, fontStyle: "italic", padding: "24px 0" }}>
           No events logged yet. The chart will populate after the first episode.
+        </div>
+      ) : view === "table" ? (
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, minWidth: 600 }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: "left", padding: "6px 10px", color: C.mu, fontSize: 10, letterSpacing: 2, fontWeight: 400, borderBottom: `1px solid ${C.bd}`, whiteSpace: "nowrap" }}>CASTAWAY</th>
+                {Array.from({ length: TOTAL_EPS }, (_, i) => (
+                  <th key={i + 1} style={{ textAlign: "center", padding: "6px 4px", color: i + 1 <= maxEp ? C.mu : "rgba(138,115,85,.3)", fontSize: 10, letterSpacing: 1, fontWeight: 400, borderBottom: `1px solid ${C.bd}`, minWidth: 36 }}>EP {i + 1}</th>
+                ))}
+                <th style={{ textAlign: "center", padding: "6px 10px", color: C.am, fontSize: 10, letterSpacing: 2, fontWeight: 700, borderBottom: `1px solid ${C.bd}`, whiteSpace: "nowrap" }}>TOTAL</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tableRows.map((row, ri) => (
+                <tr key={row.cast.id} style={{ opacity: row.isElim ? 0.45 : 1, background: ri % 2 === 0 ? "rgba(255,255,255,.01)" : "transparent" }}>
+                  <td style={{ padding: "6px 10px", color: row.isElim ? C.mu : C.tx, fontWeight: 600, borderBottom: `1px solid rgba(245,158,11,.06)`, whiteSpace: "nowrap" }}>
+                    {row.isElim && <span style={{ marginRight: 5, fontSize: 10 }}>💀</span>}{row.cast.name}
+                  </td>
+                  {row.eps.map((pts, epIdx) => {
+                    const ep = epIdx + 1;
+                    const isFuture = ep > maxEp;
+                    const isPostElim = elimEps[row.cast.id] && ep > elimEps[row.cast.id];
+                    const display = isFuture || isPostElim ? "—" : pts === null || pts === 0 ? "" : pts > 0 ? `+${pts}` : pts;
+                    const color = pts > 0 ? "#4ade80" : pts < 0 ? "#f87171" : C.mu;
+                    return (
+                      <td key={ep} style={{ textAlign: "center", padding: "6px 4px", color: isFuture || isPostElim ? "rgba(138,115,85,.25)" : color, borderBottom: `1px solid rgba(245,158,11,.06)`, fontWeight: pts && !isFuture && !isPostElim ? 700 : 400 }}>
+                        {display}
+                      </td>
+                    );
+                  })}
+                  <td style={{ textAlign: "center", padding: "6px 10px", color: row.total > 0 ? C.al : row.total < 0 ? "#f87171" : C.mu, fontWeight: 700, borderBottom: `1px solid rgba(245,158,11,.06)` }}>
+                    {row.total > 0 ? `+${row.total}` : row.total}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : (
         <div style={{ overflowX: "auto" }}>
@@ -947,7 +1006,7 @@ function PerformanceChart({ state, eliminated }) {
   );
 }
 
-// ── SCORING PAGE ───────────────────────────────────────────────────────────
+// ── SCORING PAGE ─────────────────────────────────────────────────────────
 function ScoringPage({ state, scores, eliminated }) {
   const [sel, setSel] = useState(null);
   const sorted = [...CAST].sort((a, b) => (scores.castScores[b.id] || 0) - (scores.castScores[a.id] || 0));
