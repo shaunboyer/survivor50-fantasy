@@ -173,7 +173,7 @@ function PrizesPage({ scores }) {
                       <div style={{ width: 36, height: 36, borderRadius: "50%", background: p.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#0c0a06" }}>
                         {p.winner[0].charAt(0).toUpperCase()}
                       </div>
-                      <span style={{ fontSize: 18, fontWeight: 700, color: C.al }}>{p.winner[0]}</span>
+                      <span style={{ fontSize: 18, fontWeight: 700, color: "#ffffff" }}>{p.winner[0]}</span>
                     </div>
                     <span style={{ fontSize: 22, fontWeight: 700, color: p.color }}>{p.winner[1].total} pts</span>
                   </div>
