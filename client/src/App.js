@@ -139,36 +139,9 @@ function Headshot({ img, size = 44, eliminated = false, tribe }) {
 function PrizesPage({ scores }) {
   const sorted = Object.entries(scores.teamScores).sort((a, b) => b[1].total - a[1].total);
   const prizes = [
-    {
-      place: "1st Place",
-      medal: "🥇",
-      item: "REPLICA SNAKE & BALL PUZZLE",
-      img: "/images/survivorpuzzle.webp",
-      color: "#fbbf24",
-      shadow: "rgba(251,191,36,.2)",
-      border: "rgba(251,191,36,.4)",
-      winner: sorted[0],
-    },
-    {
-      place: "2nd Place",
-      medal: "🥈",
-      item: "SURVIVOR BUFF OF YOUR CHOICE",
-      img: "/images/survivorbuff.png",
-      color: "#94a3b8",
-      shadow: "rgba(148,163,184,.2)",
-      border: "rgba(148,163,184,.4)",
-      winner: sorted[1],
-    },
-    {
-      place: "3rd Place",
-      medal: "🥉",
-      item: "20 LB BAG OF RICE",
-      img: "/images/survivorrice.webp",
-      color: "#b45309",
-      shadow: "rgba(180,83,9,.2)",
-      border: "rgba(180,83,9,.4)",
-      winner: sorted[2],
-    },
+    { place: "1st Place", medal: "🥇", amount: "$120", color: "#fbbf24", shadow: "rgba(251,191,36,.2)", border: "rgba(251,191,36,.4)", winner: sorted[0] },
+    { place: "2nd Place", medal: "🥈", amount: "$70",  color: "#94a3b8", shadow: "rgba(148,163,184,.2)", border: "rgba(148,163,184,.4)", winner: sorted[1] },
+    { place: "3rd Place", medal: "🥉", amount: "$30",  color: "#b45309", shadow: "rgba(180,83,9,.2)",   border: "rgba(180,83,9,.4)",   winner: sorted[2] },
   ];
 
   return (
@@ -178,48 +151,36 @@ function PrizesPage({ scores }) {
         <div style={S.ps}>Current leaders shown based on live standings. May the best tribe win.</div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {prizes.map((p, i) => (
           <div key={i} style={{ background: "linear-gradient(135deg,#161208,#1e1710)", border: `1px solid ${p.border}`, borderRadius: 6, overflow: "hidden", boxShadow: `0 0 30px ${p.shadow}` }}>
-            <div style={{ display: "flex", alignItems: "stretch", flexWrap: "wrap" }}>
-
-              {/* Prize image */}
-              <div style={{ width: 200, minHeight: 200, flexShrink: 0, background: "rgba(0,0,0,.3)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-                <img
-                  src={p.img}
-                  alt={p.item}
-                  style={{ maxWidth: "100%", maxHeight: 180, objectFit: "contain", filter: "drop-shadow(0 4px 12px rgba(0,0,0,.5))" }}
-                  onError={e => { e.target.style.display = "none"; }}
-                />
+            <div style={{ padding: "24px 28px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 20 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <span style={{ fontSize: 36 }}>{p.medal}</span>
+                  <div>
+                    <div style={{ fontSize: 13, color: C.mu, letterSpacing: 3, textTransform: "uppercase", marginBottom: 2 }}>{p.place}</div>
+                    <div style={{ fontSize: 38, fontWeight: 700, color: p.color, lineHeight: 1 }}>{p.amount}</div>
+                  </div>
+                </div>
               </div>
 
-              {/* Prize info */}
-              <div style={{ flex: 1, padding: "24px 28px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                  <span style={{ fontSize: 32 }}>{p.medal}</span>
-                  <span style={{ fontSize: 22, fontWeight: 700, color: p.color, letterSpacing: 3, textTransform: "uppercase" }}>{p.place}</span>
-                </div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: C.tx, marginBottom: 20 }}>{p.item}</div>
-
-                {/* Current leader */}
-                <div style={{ borderTop: `1px solid ${p.border}`, paddingTop: 16 }}>
-                  <div style={{ fontSize: 10, letterSpacing: 3, color: C.mu, textTransform: "uppercase", marginBottom: 8 }}>CURRENTLY WINNING THIS</div>
-                  {p.winner ? (
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: p.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#0c0a06" }}>
-                          {p.winner[0].charAt(0).toUpperCase()}
-                        </div>
-                        <span style={{ fontSize: 18, fontWeight: 700, color: C.al }}>{p.winner[0]}</span>
+              <div style={{ borderTop: `1px solid ${p.border}`, paddingTop: 16 }}>
+                <div style={{ fontSize: 10, letterSpacing: 3, color: C.mu, textTransform: "uppercase", marginBottom: 10 }}>CURRENTLY WINNING THIS</div>
+                {p.winner ? (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: "50%", background: p.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#0c0a06" }}>
+                        {p.winner[0].charAt(0).toUpperCase()}
                       </div>
-                      <span style={{ fontSize: 22, fontWeight: 700, color: p.color }}>{p.winner[1].total} pts</span>
+                      <span style={{ fontSize: 18, fontWeight: 700, color: C.al }}>{p.winner[0]}</span>
                     </div>
-                  ) : (
-                    <div style={{ fontSize: 14, color: C.mu, fontStyle: "italic" }}>No teams drafted yet.</div>
-                  )}
-                </div>
+                    <span style={{ fontSize: 22, fontWeight: 700, color: p.color }}>{p.winner[1].total} pts</span>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 14, color: C.mu, fontStyle: "italic" }}>No teams drafted yet.</div>
+                )}
               </div>
-
             </div>
           </div>
         ))}
