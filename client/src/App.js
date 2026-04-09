@@ -733,9 +733,13 @@ function LeaderboardPage({ me, state, scores }) {
                         {(user?.picks || []).map((cid, idx) => {
                           const c = CAST.find(x => x.id === cid);
                           const p = breakdown[cid] ?? 0;
+                          const isElim = !!scores.eliminated?.[cid];
                           return (
-                            <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13 }}>
-                              <span style={{ color: C.tx }}>{c?.name} <span style={{ color: C.mu, fontSize: 11 }}>({c?.seasons})</span></span>
+                            <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, opacity: isElim ? 0.4 : 1 }}>
+                              <span style={{ color: isElim ? C.mu : C.tx }}>
+                                {isElim && <span style={{ fontSize: 10, marginRight: 4 }}>💀</span>}
+                                {c?.name} <span style={{ color: C.mu, fontSize: 11 }}>({c?.seasons})</span>
+                              </span>
                               <span style={{ color: p >= 0 ? "#4ade80" : "#f87171", fontWeight: 600 }}>{p >= 0 ? `+${p}` : p} pts</span>
                             </div>
                           );
